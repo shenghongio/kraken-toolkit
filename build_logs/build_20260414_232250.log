@@ -1,0 +1,14 @@
+WORK=/tmp/go-build4147608706
+go: downloading github.com/spf13/cobra v1.10.2
+# get https://proxy.golang.org/github.com/spf13/cobra/@v/v1.10.2.zip
+# get https://proxy.golang.org/github.com/spf13/cobra/@v/v1.10.2.zip: Get "https://proxy.golang.org/github.com/spf13/cobra/@v/v1.10.2.zip": dial tcp 142.250.69.177:443: i/o timeout
+# get https://proxy.golang.org/github.com/inconshreveable/mousetrap/@v/v1.1.0.mod
+# get https://proxy.golang.org/github.com/spf13/cobra/@v/v1.10.2.mod
+# get https://proxy.golang.org/github.com/spf13/pflag/@v/v1.0.9.mod
+# get https://proxy.golang.org/github.com/inconshreveable/mousetrap/@v/v1.1.0.mod: Get "https://proxy.golang.org/github.com/inconshreveable/mousetrap/@v/v1.1.0.mod": dial tcp 142.250.69.177:443: i/o timeout
+# get https://proxy.golang.org/github.com/spf13/pflag/@v/v1.0.9.mod: Get "https://proxy.golang.org/github.com/spf13/pflag/@v/v1.0.9.mod": dial tcp 142.250.69.177:443: i/o timeout
+# get https://proxy.golang.org/github.com/spf13/cobra/@v/v1.10.2.mod: Get "https://proxy.golang.org/github.com/spf13/cobra/@v/v1.10.2.mod": dial tcp 142.250.69.177:443: i/o timeout
+internal/cmd/root.go:4:2: github.com/spf13/cobra@v1.10.2: Get "https://proxy.golang.org/github.com/spf13/cobra/@v/v1.10.2.zip": dial tcp 142.250.69.177:443: i/o timeout
+Command exited with non-zero status 1
+0.03user 0.01system 1:00.05elapsed 0%CPU (0avgtext+0avgdata 17664maxresident)k
+0inputs+0outputs (0major+2128minor)pagefaults 0swaps

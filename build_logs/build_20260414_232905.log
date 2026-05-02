@@ -1,0 +1,18 @@
+WORK=/tmp/go-build3245526012
+github.com/sysint/internal/cmd
+mkdir -p $WORK/b062/
+cat >/tmp/go-build3245526012/b062/importcfg << 'EOF' # internal
+# import config
+packagefile encoding/json=/home/sketc/.cache/go-build/ef/effff2de83a9cbfd0baf9be799c72fce57a1159f15cc618784cdced60a629bde-d
+packagefile fmt=/home/sketc/.cache/go-build/e4/e4f44477cb7f48b77d960d6fdf39147fea502125376061b538fd11f253683b83-d
+packagefile github.com/spf13/cobra=/home/sketc/.cache/go-build/47/47721614dae947e8d59d202d50bb3b2873212a05c2a4fb68214ae7f320ba9393-d
+packagefile github.com/sysint/internal/logger=/home/sketc/.cache/go-build/0a/0a5e57fb86ff970aa9d1c484d924983e21ba93eabdf77ff9a758c2b8dcf0419e-d
+packagefile github.com/sysint/internal/version=/home/sketc/.cache/go-build/29/29e201daa67b507cdaa9eefa9f1af61f8989d2aace9cc88fd7b70707f9a18bb1-d
+EOF
+cd /home/sketc/workspace/go-progect/sysint
+/home/sketc/.g/go/pkg/tool/linux_arm64/compile -o $WORK/b062/_pkg_.a -trimpath "$WORK/b062=>" -p github.com/sysint/internal/cmd -lang=go1.25 -complete -buildid DY2dRzDr8GXZ3lzDbseQ/DY2dRzDr8GXZ3lzDbseQ -goversion go1.25.9 -c=4 -nolocalimports -importcfg $WORK/b062/importcfg -pack ./internal/cmd/root.go ./internal/cmd/syscheck.go ./internal/cmd/version.go
+# github.com/sysint/internal/cmd
+internal/cmd/syscheck.go:28:8: undefined: runSysCheck
+Command exited with non-zero status 1
+0.03user 0.03system 0:00.03elapsed 212%CPU (0avgtext+0avgdata 21608maxresident)k
+8inputs+24outputs (0major+5868minor)pagefaults 0swaps

@@ -1,0 +1,133 @@
+WORK=/var/folders/qn/4b623_t54pj8gfq_cg37vh4w0000gn/T/go-build1379298559
+cd /Users/ssh/workspace/github.com/sysint
+git status --porcelain
+cd /Users/ssh/workspace/github.com/sysint
+git -c log.showsignature=false log -1 --format=%H:%ct
+cd /Users/ssh/workspace/github.com/sysint; git config extensions.objectformat
+0.011s # cd /Users/ssh/workspace/github.com/sysint; git config extensions.objectformat
+cd /Users/ssh/workspace/github.com/sysint; git -c log.showsignature=false log --no-decorate -n1 '--format=format:%H %ct %D' f2d581a7d0dcc57d82005231a3220f1060600d88 --
+0.013s # cd /Users/ssh/workspace/github.com/sysint; git -c log.showsignature=false log --no-decorate -n1 '--format=format:%H %ct %D' f2d581a7d0dcc57d82005231a3220f1060600d88 --
+cd /Users/ssh/workspace/github.com/sysint; git for-each-ref --format %(refname) refs/tags --merged f2d581a7d0dcc57d82005231a3220f1060600d88
+0.012s # cd /Users/ssh/workspace/github.com/sysint; git for-each-ref --format %(refname) refs/tags --merged f2d581a7d0dcc57d82005231a3220f1060600d88
+cd /Users/ssh/workspace/github.com/sysint; git -c log.showsignature=false log --no-decorate -n1 '--format=format:%H %ct %D' f2d581a7d0dc --
+0.012s # cd /Users/ssh/workspace/github.com/sysint; git -c log.showsignature=false log --no-decorate -n1 '--format=format:%H %ct %D' f2d581a7d0dc --
+cd /Users/ssh/workspace/github.com/sysint; git cat-file blob f2d581a7d0dcc57d82005231a3220f1060600d88:go.mod
+0.013s # cd /Users/ssh/workspace/github.com/sysint; git cat-file blob f2d581a7d0dcc57d82005231a3220f1060600d88:go.mod
+github.com/sysint/cmd/sysint
+mkdir -p $WORK/b001/
+cat >/var/folders/qn/4b623_t54pj8gfq_cg37vh4w0000gn/T/go-build1379298559/b001/importcfg << 'EOF' # internal
+# import config
+packagefile fmt=/Users/ssh/Library/Caches/go-build/91/913ea1b1e10fbe6f5e5e66fe845421342bf028bcc5de207db64ace435d7ebc3e-d
+packagefile github.com/sysint/internal/cmd=/Users/ssh/Library/Caches/go-build/32/32187e1e94d75a1ddc63135f4797e5b265b56baa83765ac518346f0b58d1d9aa-d
+packagefile github.com/sysint/internal/logger=/Users/ssh/Library/Caches/go-build/36/36c1027222a12cf0896900f511ec8f4a9e5989ecd66692837b525076fa8d54f8-d
+packagefile os=/Users/ssh/Library/Caches/go-build/00/0012d8668c236ee717ac3c280445fdd3761bc6e22baad9da93e915154a670fd0-d
+packagefile runtime=/Users/ssh/Library/Caches/go-build/45/45433b01b8bb881c9c7b76aaa77fe4702f4d2b42d522dbde52325d651e3bd909-d
+EOF
+cd /Users/ssh/workspace/github.com/sysint
+/Users/ssh/.gvm/gos/go1.25.3/pkg/tool/darwin_arm64/compile -o $WORK/b001/_pkg_.a -trimpath "$WORK/b001=>" -p main -lang=go1.25 -complete -buildid OkswIHcdKcG3VGefM7Ul/OkswIHcdKcG3VGefM7Ul -goversion go1.25.3 -c=4 -shared -nolocalimports -importcfg $WORK/b001/importcfg -pack ./cmd/sysint/main.go
+go tool buildid -w $WORK/b001/_pkg_.a # internal
+cp $WORK/b001/_pkg_.a /Users/ssh/Library/Caches/go-build/71/7147e305abb1c08cab450d68bb84b358848e3810498fc7c950f6e4de6312a675-d # internal
+cat >/var/folders/qn/4b623_t54pj8gfq_cg37vh4w0000gn/T/go-build1379298559/b001/importcfg.link << 'EOF' # internal
+packagefile github.com/sysint/cmd/sysint=/var/folders/qn/4b623_t54pj8gfq_cg37vh4w0000gn/T/go-build1379298559/b001/_pkg_.a
+packagefile fmt=/Users/ssh/Library/Caches/go-build/91/913ea1b1e10fbe6f5e5e66fe845421342bf028bcc5de207db64ace435d7ebc3e-d
+packagefile github.com/sysint/internal/cmd=/Users/ssh/Library/Caches/go-build/32/32187e1e94d75a1ddc63135f4797e5b265b56baa83765ac518346f0b58d1d9aa-d
+packagefile github.com/sysint/internal/logger=/Users/ssh/Library/Caches/go-build/36/36c1027222a12cf0896900f511ec8f4a9e5989ecd66692837b525076fa8d54f8-d
+packagefile os=/Users/ssh/Library/Caches/go-build/00/0012d8668c236ee717ac3c280445fdd3761bc6e22baad9da93e915154a670fd0-d
+packagefile runtime=/Users/ssh/Library/Caches/go-build/45/45433b01b8bb881c9c7b76aaa77fe4702f4d2b42d522dbde52325d651e3bd909-d
+packagefile errors=/Users/ssh/Library/Caches/go-build/33/33e457302dff5800d25d2072e1d8aa798b6c655b46e45298a2dc58eae17fb9cc-d
+packagefile internal/fmtsort=/Users/ssh/Library/Caches/go-build/14/14ebe745d9530a613f2653ffd2d9d4d9ba520a992cfbb534163fbea707d5da4f-d
+packagefile io=/Users/ssh/Library/Caches/go-build/e3/e30be646ef39841f0982fb0a7ff587e58926e58096a7a4ee17343f6eef1bc005-d
+packagefile math=/Users/ssh/Library/Caches/go-build/10/10a9dfc4449602764c8fd4c1e7e8de7eab1f04c42b23ad83fc7a39f3971dafa7-d
+packagefile reflect=/Users/ssh/Library/Caches/go-build/9e/9e211313ab4c979aa9931a680ef3dd1a5bc4d98117bfcee97a8d5242a2dba9b4-d
+packagefile slices=/Users/ssh/Library/Caches/go-build/2c/2ccedde83cc679bfc8667dc34a270bed1c7192cf2a4d227680d255c5a793d616-d
+packagefile strconv=/Users/ssh/Library/Caches/go-build/2a/2a6a63d1470719b11d5fdf5d0a5ada816990f1e930d53ab7842aaef6ffba381e-d
+packagefile sync=/Users/ssh/Library/Caches/go-build/b6/b65c1bcea85d6e2a1d285c7e5e576a5d6cda93b3781ab4306197d4142fd2fdd8-d
+packagefile unicode/utf8=/Users/ssh/Library/Caches/go-build/68/68f5e28029a5e784918a0e3d74d6cd2390c870f2b620133d6ce8e4d16d919842-d
+packagefile encoding/json=/Users/ssh/Library/Caches/go-build/cf/cf895eeea7e55c722578422808e87a7d27baca44de0a05b5139b27ce3042b711-d
+packagefile github.com/spf13/cobra=/Users/ssh/Library/Caches/go-build/a2/a21a643662f45739afdcaac332bb36d16fd90b05b38c04282df0ec3b6978b867-d
+packagefile github.com/sysint/internal/version=/Users/ssh/Library/Caches/go-build/b7/b71e01b45c5933276d9dd74bfb759c81b862e6bcd7982589b804b9ac44d1ef08-d
+packagefile context=/Users/ssh/Library/Caches/go-build/0a/0a3005a1498a0103f4977190c7be42ff3be5e9939c25fd76229bb76871ec7f30-d
+packagefile flag=/Users/ssh/Library/Caches/go-build/0e/0ea29b1a0563d84358564def7fdbc32d4330807cd35bb3cc42b0f1cff225414d-d
+packagefile log/slog=/Users/ssh/Library/Caches/go-build/51/514a8e90ff70e882596880e549cb705290ec74d6fc0ca1eeb0560b7cccc32ae3-d
+packagefile strings=/Users/ssh/Library/Caches/go-build/bc/bccbdaa86d7cf4b752084e01c144fb27e21b6778300dca1162128cb6fb00352b-d
+packagefile time=/Users/ssh/Library/Caches/go-build/ae/ae6ea3f768dae6b2396ac61878098b9cab16a716cd0e255edefd62f7616f5931-d
+packagefile internal/bytealg=/Users/ssh/Library/Caches/go-build/3e/3e252cf2600945817b89f360d0816a7a7a425a59888ba21c28d03c82582f15fd-d
+packagefile internal/filepathlite=/Users/ssh/Library/Caches/go-build/ef/ef16df3a881325c1f298d49a8070adc4f2b8f3816d9273f51865494f1b9f6b4c-d
+packagefile internal/itoa=/Users/ssh/Library/Caches/go-build/ed/edf7dbad5b7369a3a7d26c3754dc25c2913ae40b00a20a3e5bb8d714aaa752a1-d
+packagefile internal/poll=/Users/ssh/Library/Caches/go-build/15/1598db3aa0ec8ff2f3c585175491c8955703e3c0b28a797b9be7e4a631940cfb-d
+packagefile internal/stringslite=/Users/ssh/Library/Caches/go-build/5d/5d7316bbcbecb97f8caf89b1e50aefe15036f21a18e26d429995107750cff613-d
+packagefile internal/syscall/execenv=/Users/ssh/Library/Caches/go-build/73/73324867e802917f5967635e7f8ee3c0a7d9d5c7edf589d38b51e14fc720d1ca-d
+packagefile internal/syscall/unix=/Users/ssh/Library/Caches/go-build/a1/a16394d1c04b69f7062adb405e8acc41051a733280af6965ec779ec7dce2ae28-d
+packagefile internal/testlog=/Users/ssh/Library/Caches/go-build/51/51a380c10b87cc947ed9403d46bd02d640075763b515b9deed6e245ffeabd503-d
+packagefile io/fs=/Users/ssh/Library/Caches/go-build/3f/3f6697dba8887b6438c2511dcc47454a9d4f123f81a46af753d2e3ea4c6c74ec-d
+packagefile sync/atomic=/Users/ssh/Library/Caches/go-build/07/07b7d86f35b8e1aa89ee64f474fee4ef93a4e07cc39689c0f12e3cf087a036a9-d
+packagefile syscall=/Users/ssh/Library/Caches/go-build/b7/b7aafdeaa3a40ada0011aa5ed1b92b4e01a37bd3347f9c399e76d9ac8921be43-d
+packagefile internal/abi=/Users/ssh/Library/Caches/go-build/6d/6d35db68035066af484a437b224edd36b123a9aa97e34598b207a47e9e767240-d
+packagefile internal/byteorder=/Users/ssh/Library/Caches/go-build/80/80fd781658cce613ae136bcdc88ca6f11cf9de1e96e9ed2e44e7d1d3e9897a35-d
+packagefile internal/chacha8rand=/Users/ssh/Library/Caches/go-build/aa/aadfa1c1e5d6ad73371837c0e350b32b231a3ce6159ac6049e688f4221dae824-d
+packagefile internal/coverage/rtcov=/Users/ssh/Library/Caches/go-build/1b/1bb17e5fb667739ab16e0fcad5f3d121e3319ca8d95d3c24b6f36e1b310ecd24-d
+packagefile internal/cpu=/Users/ssh/Library/Caches/go-build/21/21dc47642d80ee6a847cfffcdb99c34988620d3aea8de6d3bca018f54744ea47-d
+packagefile internal/goarch=/Users/ssh/Library/Caches/go-build/f7/f72fd4e2bd29ea45ffab3476481888155de009a44a9f6abccf093ee3989997cd-d
+packagefile internal/godebugs=/Users/ssh/Library/Caches/go-build/73/73c90559918062bb6e33d5ae763fd513b8e0348b1d4bf4d0842d57fa20353e5f-d
+packagefile internal/goexperiment=/Users/ssh/Library/Caches/go-build/76/76e0a1ab705e94f35bfe12e5963cdac1c73a6c64e3b231d1269fe0cf6cdc5bba-d
+packagefile internal/goos=/Users/ssh/Library/Caches/go-build/46/4646694cd361bcd96f4762d9bca7d9b14d7f4f9d097f273543af00773dbf5fb3-d
+packagefile internal/profilerecord=/Users/ssh/Library/Caches/go-build/62/621cca517e6ba56d3b6d406aed60102cdbde4881f2f38f071c67a7bd53e61e10-d
+packagefile internal/runtime/atomic=/Users/ssh/Library/Caches/go-build/2d/2d46391900c2d140eb18dba00aa376102f8534eacde17268e8976a2c323a0b10-d
+packagefile internal/runtime/exithook=/Users/ssh/Library/Caches/go-build/d9/d9b11c0bd7cdbf4cf4e3d01cb80c0cd790c33dcc184ba76bb0dadd9675d525fb-d
+packagefile internal/runtime/gc=/Users/ssh/Library/Caches/go-build/f2/f2e20ece54f57ae2e43dc3b6c1c937c9fe2d1c362c0b65b2e41c3f04837e3ed4-d
+packagefile internal/runtime/maps=/Users/ssh/Library/Caches/go-build/7f/7fb07f1b4a0b3863c7f2eb31623e469d676b4096fa25ea52faa8adc5c10a26ec-d
+packagefile internal/runtime/math=/Users/ssh/Library/Caches/go-build/ba/ba48c9cfce336c8b498e838c003b2d37f24890e9a856395ac3c4b015341637b9-d
+packagefile internal/runtime/strconv=/Users/ssh/Library/Caches/go-build/69/695ebc0a8222f8ba2d8e4f2ae1ec9e4609a7a69c04f438ddf807dbaa95fdc437-d
+packagefile internal/runtime/sys=/Users/ssh/Library/Caches/go-build/f6/f6dfb8ec2b48cbed9ddeb070efd4369951b1e1f140cbe0aa4a58f39b586d8968-d
+packagefile internal/trace/tracev2=/Users/ssh/Library/Caches/go-build/22/22439ee6ea950e3ce1423a9763d676439e73f4caa2351fe66f22142102b9121c-d
+packagefile internal/reflectlite=/Users/ssh/Library/Caches/go-build/ec/ec490aff3538978238bb100830a906f078f5d2f6c5a27418b09d58cff715c31a-d
+packagefile cmp=/Users/ssh/Library/Caches/go-build/e3/e3bd5177478c008a887104efccab486c7a80d8a0587425cb247e20a5efaceeea-d
+packagefile math/bits=/Users/ssh/Library/Caches/go-build/5b/5b6c7af60fd64b5aeeafe0d69fc65ce336d044a34af8a7f4171bb66dae6b868b-d
+packagefile internal/race=/Users/ssh/Library/Caches/go-build/40/401dc3fce087cb88d6e2b0132cbac0fa59ae2ea69f251a380bc548dcd05c184d-d
+packagefile internal/unsafeheader=/Users/ssh/Library/Caches/go-build/09/09f2545005cc60db17ae23c6fb82f69e3ecfc0c82abeba2aeeced0c1b328eefc-d
+packagefile iter=/Users/ssh/Library/Caches/go-build/50/50df1348640534d39327534d8c228f78fff73b0ab38242ed12323359a926c105-d
+packagefile unicode=/Users/ssh/Library/Caches/go-build/0e/0e977ec49766a09dd54f0cb02bb09ca05e7b06507b07eed97b69ab16cda792c3-d
+packagefile internal/sync=/Users/ssh/Library/Caches/go-build/e2/e2d76e7be5a6be1384de91e57f552d099a1d1c644d0bfcb325e77c1f80aee0af-d
+packagefile internal/synctest=/Users/ssh/Library/Caches/go-build/80/8034b8151cbb4ccd75af4e4bda252d2a230b3727bd1c03b787c13fb02e2f7361-d
+packagefile bytes=/Users/ssh/Library/Caches/go-build/f3/f344b07ac543a85eb3e5eeaaf8d59229d3e3ff359d16f095b2cae2ee3743e788-d
+packagefile encoding=/Users/ssh/Library/Caches/go-build/31/3142b95d120317c395b789caf50e0a960f4f2197e402c0475f1e4578635dd78d-d
+packagefile encoding/base64=/Users/ssh/Library/Caches/go-build/9a/9a831571d5ef1ecadb4695ecd6d83f9c298b8496e60d762eab8eca3e19635ac2-d
+packagefile unicode/utf16=/Users/ssh/Library/Caches/go-build/1f/1f48baef0d54e7d30ffb8bb8e417b48f3f8760a359dfbbb3b9d3ca6bef8c712b-d
+packagefile github.com/spf13/pflag=/Users/ssh/Library/Caches/go-build/7f/7f3f9203e3c8547f6eb5c9319a9d6deedc99a361179b220614f92cade2d52e5f-d
+packagefile path/filepath=/Users/ssh/Library/Caches/go-build/fe/fee97f3a14f6f0adae807e6c3b004985d20b7443f0755f9f9ec53c3322373519-d
+packagefile regexp=/Users/ssh/Library/Caches/go-build/f8/f8ab9a1ecca997f8f32279a42333db1bbfa99011dd7e48a5a415c0b95d3e3428-d
+packagefile sort=/Users/ssh/Library/Caches/go-build/a8/a80f9aeee0df8ce94c694027ed18f7456a10674c3d5ae4a17a6f65c32ebfadd7-d
+packagefile text/template=/Users/ssh/Library/Caches/go-build/e5/e5926c84052680c331c5e8706cbc5e90068b056b0fe4f0a10d43027dab761d46-d
+packagefile log=/Users/ssh/Library/Caches/go-build/ea/eaee4c5f9c9269ec5edb763f2e16647aa4d8d47d8217d8478edbf7f03d83d7d5-d
+packagefile log/internal=/Users/ssh/Library/Caches/go-build/54/5454def763f7c72dae81bc8b86b330d6d0b5494e76dec1400591a870eaad63ff-d
+packagefile log/slog/internal=/Users/ssh/Library/Caches/go-build/b0/b0fbfe87fe764b3a724a6b51135fcbc9748dd8f43cb25a190defef2f417d5e69-d
+packagefile log/slog/internal/buffer=/Users/ssh/Library/Caches/go-build/cb/cb375f0f1d26316e0fe4c9d6327c24a2bc52529902ccda006c072aa9a6298e28-d
+packagefile internal/godebug=/Users/ssh/Library/Caches/go-build/ec/ec4997c0f65602468c692aad7678654cecc092291649c7d6af462040dbcb555f-d
+packagefile internal/oserror=/Users/ssh/Library/Caches/go-build/59/5910847b7e948c383b9703ffa455a5f3175c00a3dd10a1f8b61284d25d377684-d
+packagefile path=/Users/ssh/Library/Caches/go-build/e2/e276b823a711ffc02d9b7ce060a4ff1b689f5f66046fe4ffc3b4449177b2fc4a-d
+packagefile internal/asan=/Users/ssh/Library/Caches/go-build/b9/b9becf701350598c670156349afe47d2f83fc6ed9dd170af8baffbc35a352581-d
+packagefile internal/msan=/Users/ssh/Library/Caches/go-build/2d/2d5e2cb8a5c793cb1b297a77807746d6e400ffe91557bede9130a1876cce3083-d
+packagefile encoding/csv=/Users/ssh/Library/Caches/go-build/99/99fed2df4757641a6a2c1f516ab6f847092329448eb035f219c1f6f3c3f991ee-d
+packagefile encoding/hex=/Users/ssh/Library/Caches/go-build/7a/7a200fca0dc87ec8d2f18619c3f74b33890c85375a83aeb3ff255c5bf162ddeb-d
+packagefile net=/Users/ssh/Library/Caches/go-build/77/773d169f5d11c4ed68d43288f6283e160f04f1b5973c0ff8f0471c6a247e5ce7-d
+packagefile regexp/syntax=/Users/ssh/Library/Caches/go-build/9a/9a110e0872b3442f854a7f3520315602efd0daac4fd8956cf54d9ce9c0e416e1-d
+packagefile maps=/Users/ssh/Library/Caches/go-build/e8/e85f25a7d4f25c68c3da84dcba47e86314262e1962e01644c9f529d1e59f0873-d
+packagefile net/url=/Users/ssh/Library/Caches/go-build/6a/6a278a1361937943063105cde1b9d8a5b09e3d26ec5c23bdfd7a814af24a0cb4-d
+packagefile text/template/parse=/Users/ssh/Library/Caches/go-build/26/26b7b84f47bb91097497e4554e45d7cf6af49e42e95976c44841170e363d7179-d
+packagefile internal/bisect=/Users/ssh/Library/Caches/go-build/3b/3bdf1306c4ed005e349d7759dbe22e66da6e650452874a5a15ba57d488838b09-d
+packagefile bufio=/Users/ssh/Library/Caches/go-build/89/89b172175684627d8e05622097baa08c1b248bd63f160fa2ccd7e3653fb9d7c1-d
+packagefile vendor/golang.org/x/net/dns/dnsmessage=/Users/ssh/Library/Caches/go-build/b1/b1edaae1f1b976737ef896285e85b59e819b172510ff2406b81cb219d520576f-d
+packagefile internal/nettrace=/Users/ssh/Library/Caches/go-build/ba/ba7d19a1195c6d33023f93d6bb51c96f4ca294d5fc39091cfef9b68e38dc1e9b-d
+packagefile internal/routebsd=/Users/ssh/Library/Caches/go-build/f7/f752c1a9e75b808603215aab331312f0cd2897272be082e01ab35af79e6d2837-d
+packagefile internal/singleflight=/Users/ssh/Library/Caches/go-build/75/751c0ba66d24ceeacf5e2c3ed11398fa3a20a45d7045d93f7e29406c0cf54a39-d
+packagefile net/netip=/Users/ssh/Library/Caches/go-build/25/25b80c060edb39419ec4a12af21a87bba308e4a7234590146cc518a9ff9ba570-d
+packagefile unique=/Users/ssh/Library/Caches/go-build/87/870d797bd18b8351f60dc9f29b4048cdd84cc3084fb2952063b84716c581a94a-d
+packagefile weak=/Users/ssh/Library/Caches/go-build/79/792f503e1656d6d624216847ee7e8b2a814f44137a4cac5f7b4fd07dece4dd2e-d
+modinfo "0w\xaf\f\x92t\b\x02A\xe1\xc1\a\xe6\xd6\x18\xe6path\tgithub.com/sysint/cmd/sysint\nmod\tgithub.com/sysint\tv0.0.0-20260412110649-f2d581a7d0dc+dirty\t\ndep\tgithub.com/spf13/cobra\tv1.10.2\th1:DMTTonx5m65Ic0GOoRY2c16WCbHxOOw6xxezuLaBpcU=\ndep\tgithub.com/spf13/pflag\tv1.0.9\th1:9exaQaMOCwffKiiiYk6/BndUBv+iRViNW+4lEMi0PvY=\nbuild\t-buildmode=exe\nbuild\t-compiler=gc\nbuild\t-ldflags=\"-X 'github.com/sysint/internal/version.Version=dev' -X 'github.com/sysint/internal/version.GitCommit=f2d581a' -X 'github.com/sysint/internal/version.GitBranch=main' -X 'github.com/sysint/internal/version.BuildTime=2026-04-12T11:27:31Z'\"\nbuild\tCGO_ENABLED=1\nbuild\tCGO_CFLAGS=\nbuild\tCGO_CPPFLAGS=\nbuild\tCGO_CXXFLAGS=\nbuild\tCGO_LDFLAGS=\nbuild\tGOARCH=arm64\nbuild\tGOOS=darwin\nbuild\tGOARM64=v8.0\nbuild\tvcs=git\nbuild\tvcs.revision=f2d581a7d0dcc57d82005231a3220f1060600d88\nbuild\tvcs.time=2026-04-12T11:06:49Z\nbuild\tvcs.modified=true\n\xf92C1\x86\x18 r\x00\x82B\x10A\x16\xd8\xf2"
+EOF
+mkdir -p $WORK/b001/exe/
+cd .
+GOROOT='/Users/ssh/.gvm/gos/go1.25.3' /Users/ssh/.gvm/gos/go1.25.3/pkg/tool/darwin_arm64/link -o $WORK/b001/exe/a.out -importcfg $WORK/b001/importcfg.link -buildmode=pie -buildid=NKkV2MnGma0p6td4X7gv/OkswIHcdKcG3VGefM7Ul/1feLORO_rTqm6lbj1_-6/NKkV2MnGma0p6td4X7gv -X github.com/sysint/internal/version.Version=dev -X github.com/sysint/internal/version.GitCommit=f2d581a -X github.com/sysint/internal/version.GitBranch=main -X github.com/sysint/internal/version.BuildTime=2026-04-12T11:27:31Z -extld=clang $WORK/b001/_pkg_.a
+go tool buildid -w $WORK/b001/exe/a.out # internal
+mkdir -p bin/
+mv $WORK/b001/exe/a.out bin/sysint
