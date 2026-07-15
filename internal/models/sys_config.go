@@ -1,94 +1,38 @@
 package models
 
-import (
-	"fmt"
-	"time"
-)
-
-//NodeConfig 节点配置
-type NodeConfig struct {
-	Name     string        `yaml:"name" json:"name"`
-	IP       string        `yaml:"ip" json:"ip"`
-	Port     int           `yaml:"port" json:"port"`
-	User     string        `yaml:"user" json:"user"`
-	Password string        `yaml:"password" json:"password"`
-	SSHKey   string        `yaml:"ssh_key" json:"ssh_key"`
-	Timeout  time.Duration `yaml:"timeout" json:"timeout"`
+// ChecklistItem  检查项
+type ChecklistItem struct {
+	Type        string      `yaml:"type"`            // sysctl, ulimit, kernel, cgroup, containerRuntime, port, system, storage
+	Name        string      `yaml:"name"`            // 检查项名称
+	Enabled     bool        `yaml:"enabled"`         //是否启用
+	Expected    interface{} `yaml:"value,omitempty"` //期望值
+	Description string      `yaml:"description"`     // 描述
 }
 
-// Validate 验证节点配置
-func (n *NodeConfig) Validate() error {
-	if n.IP == "" {
-		return fmt.Errorf("节点IP不能为空")
-	}
-	if n.User == "" {
-		return fmt.Errorf("节点 %s 的用户名不能为空", n.Name)
-	}
-	if n.SSHKey == "" && n.Password == "" {
-		return fmt.Errorf("节点 %s 需要提供SSH密钥或密码", n.Name)
-	}
-	if n.Port == 0 {
-		n.Port = 22
-	}
-	if n.Timeout == 0 {
-		n.Timeout = 30 * time.Second
-	}
-	return nil
+// SysCheckConfig 系统检查配置
+type SysCheckConfig struct {
+	Checklist []ChecklistItem `yaml:"checklist"`
 }
 
-//ClusterConfig 集群配置
-type ClusterConfig struct {
-	Name  string       `yaml:"name" json:"name"`
-	Nodes []NodeConfig `yaml:"nodes" json:"nodes"`
-}
-
-// CheckResult 单个节点检查结果
+// CheckResult 检查结果
 type CheckResult struct {
-	NodeName string        `yaml:"nodeName" json:"nodeName"`
-	NodeIP   string        `yaml:"nodeIP" json:"nodeIP"`
-	NodePort int           `yaml:"nodePort" json:"nodePort"`
-	Password string        `yaml:"password" json:"password"`
-	Message  string        `yaml:"message" json:"message"`
-	Duration time.Duration `yaml:"duration" json:"duration"`
-	Detail   string        `yaml:"detail" json:"detail"`
-	Error    string        `yaml:"error" json:"error"`
+	Total    int               `json:"total"`    // 总检查项
+	Passed   int               `json:"passed"`   // 通过数
+	Failed   int               `json:"failed"`   // 失败数
+	Warnings int               `json:"warnings"` // 警告数
+	Items    []CheckItemResult `json:"items"`    // 检查项详情
+	Summary  string            `json:"summary"`  // 总结信息
 }
 
-// CheckDetail 检查详情
-type CheckDetail struct {
-	Name     string `json:"name"`
-	Status   string `json:"status"` // pass/fail/warning
-	Actual   string `json:"actual"`
-	Expected string `json:"expected"`
-	Message  string `json:"message"`
-}
-
-// BatchCheckResult 批量检查结果
-type BatchCheckResult struct {
-	TotalNodes    int                     `json:"total_nodes"`
-	SuccessNodes  int                     `json:"success_nodes"`
-	FailedNodes   int                     `json:"failed_nodes"`
-	Results       map[string]*CheckResult `json:"results"`
-	TotalDuration time.Duration           `json:"total_duration"`
-}
-
-// SystemInfo 系统信息
-type SystemInfo struct {
-	Hostname      string  `json:"hostname"`
-	OS            string  `json:"os"`
-	KernelVersion string  `json:"kernel_version"`
-	CPU           CPUInfo `json:"cpu"`
-	Memory        MemInfo `json:"memory"`
-}
-
-type CPUInfo struct {
-	Cores int    `json:"cores"`
-	Model string `json:"model"`
-}
-
-type MemInfo struct {
-	TotalGB  float64 `json:"total_gb"`
-	UsedGB   float64 `json:"used_gb"`
-	FreeGB   float64 `json:"free_gb"`
-	UsagePct float64 `json:"usage_pct"`
+// CheckItemResult 单项检查结果
+type CheckItemResult struct {
+	Type        string      `json:"type"`
+	Name        string      `json:"name"`
+	Status      string      `json:"status"` // PASS, FAIL, WARN
+	Expected    interface{} `json:"expected"`
+	Actual      interface{} `json:"actual"`
+	Message     string      `json:"message"`
+	Description string      `json:"description"`
+	Fixable     bool        `json:"fixable"`               // 是否可自动修复
+	FixCommand  string      `json:"fix_command,omitempty"` // 修复命令
 }

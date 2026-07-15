@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/sysint/internal/cmd"
-	"github.com/sysint/internal/logger"
+	"github.com/kraken-pedestal/cmd/sysinit"
+	"github.com/kraken-pedestal/internal/logger"
 	"os"
 )
 
@@ -18,7 +18,7 @@ func main() {
 		}
 	}()
 
-	rootCmd := cmd.NewRootCmd()
+	rootCmd := sysinit.NewRootCmd()
 
 	if err := rootCmd.Execute(); err != nil {
 		// 错误已经在命令中记录，这里只输出到stderr

@@ -22,6 +22,7 @@ func NewBatchLogger(totalHosts int) *BatchLogger {
 		totalHosts: totalHosts,
 		startTime:  time.Now(),
 	}
+
 }
 
 // HostStart 主机开始执行
