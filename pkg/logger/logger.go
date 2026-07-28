@@ -1,14 +1,13 @@
 package logger
 
 import (
+	"github.com/fatih/color"
+	"gopkg.in/natefinch/lumberjack.v2"
 	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/fatih/color"
-	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 // LogLevel 日志级别类型
@@ -95,26 +94,25 @@ func Init(cfg *Config) error {
 			if a.Key == slog.LevelKey {
 				level := a.Value.String()
 				// 转为大写
-				level = strings.ToUpper(level)
+				//level = strings.ToUpper(level)
+				level = strings.ToLower(level)
 				if !cfg.NoColor {
 					switch level {
-					case "ERROR":
+					case "error":
 						level = color.RedString(level)
-					case "WARN":
+					case "warn":
 						level = color.YellowString(level)
-					case "INFO":
+					case "info":
 						level = color.GreenString(level)
-					case "DEBUG":
+					case "debug":
 						level = color.CyanString(level)
 					}
 				}
 				a.Value = slog.StringValue(level)
 			}
-			// 如果启用了 AddSource，且 key 为 source，格式化一下
+			// 如果启用了 AddSource，且 key 为 source，
 			if cfg.AddSource && a.Key == slog.SourceKey {
-				src := a.Value.Any().(*slog.Source)
-				if src != nil {
-					// 只显示文件名和行号，不显示全路径
+				if src, ok := a.Value.Any().(*slog.Source); ok && src != nil {
 					file := filepath.Base(src.File)
 					a.Value = slog.StringValue(file + ":" + itoa(src.Line))
 				}

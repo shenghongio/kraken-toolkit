@@ -28,10 +28,10 @@ GIT_BRANCH_CLEAN=$(shell echo $(GIT_BRANCH) | sed 's/[[:space:]/_-]/_/g' | sed '
 BUILD_TIME=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 
 # 构建 ldflags（注意包路径）
-LDFLAGS := -X 'github.com/kraken-pedestal/internal/executor/version.Version=$(VERSION)'
-LDFLAGS += -X 'github.com/kraken-pedestal/internal/executor/version.GitCommit=$(GIT_COMMIT)'
-LDFLAGS += -X 'github.com/kraken-pedestal/internal/executor/version.GitBranch=$(GIT_BRANCH_CLEAN)'
-LDFLAGS += -X 'github.com/kraken-pedestal/internal/executor/version.BuildTime=$(BUILD_TIME)'
+LDFLAGS := -X 'github.com/kraken-pedestal/internal/executor.Version=$(VERSION)'
+LDFLAGS += -X 'github.com/kraken-pedestal/internal/executor.GitCommit=$(GIT_COMMIT)'
+LDFLAGS += -X 'github.com/kraken-pedestal/internal/executor.GitBranch=$(GIT_BRANCH_CLEAN)'
+LDFLAGS += -X 'github.com/kraken-pedestal/internal/executor.BuildTime=$(BUILD_TIME)'
 
 # 交叉编译设置
 GOOS ?=
