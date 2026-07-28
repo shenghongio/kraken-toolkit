@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/kraken-pedestal/internal/deploy/executor"
+	"github.com/kraken-pedestal/pkg/logger"
 	"github.com/spf13/cobra"
 )
 
-// versionCmd 版本命令
+// VersionCmd  版本命令
 func VersionCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "version",
@@ -17,7 +18,6 @@ func VersionCmd() *cobra.Command {
 	}
 
 	// 添加命令行标志
-	cmd.Flags().Bool("short", false, "只显示简短的版本号")
 	cmd.Flags().Bool("json", false, "以JSON格式输出版本信息")
 
 	return cmd
@@ -25,17 +25,15 @@ func VersionCmd() *cobra.Command {
 
 // runVersion 执行版本命令
 func runVersion(cmd *cobra.Command, args []string) error {
+	jsonoutput, err := cmd.Flags().GetBool("json")
 
-	short, _ := cmd.Flags().GetBool("short")
-	jsonoutput, _ := cmd.Flags().GetBool("json")
-
-	if short {
-		fmt.Println(executor.Short())
-		return nil
+	if err != nil {
+		return fmt.Errorf("获取 json 标志失败: %w", err)
 	}
 
+	info := executor.Get()
+
 	if jsonoutput {
-		info := executor.Get()
 		jsonData, err := json.MarshalIndent(info, "", "  ")
 		if err != nil {
 			return fmt.Errorf("生成JSON失败: %v", err)
@@ -45,14 +43,14 @@ func runVersion(cmd *cobra.Command, args []string) error {
 	}
 
 	// 默认输出格式
-	printVersionInfo()
+	fmt.Print(AsciiLogo)
+	printVersionInfo(info)
+	logger.Debug("版本信息已显示", "version", info.Version)
 
 	return nil
 }
 
-func printVersionInfo() {
-	info := executor.Get()
-
+func printVersionInfo(info executor.VersionInfo) {
 	// 简约版本信息（无框线，简洁字段）
 	fmt.Printf("Version:    %s\n", info.Version)
 	fmt.Printf("GitCommit:  %s\n", info.GitCommit)

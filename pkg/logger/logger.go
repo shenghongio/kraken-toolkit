@@ -199,6 +199,11 @@ func With(args ...any) *slog.Logger {
 	return defaultLogger.With(args...)
 }
 
+// Default 返回当前默认 logger（用于外部检查）
+func Default() *slog.Logger {
+	return defaultLogger
+}
+
 // SetLevel 动态修改日志级别（可用于运行时调整）
 func SetLevel(level LogLevel) {
 	var l slog.Level

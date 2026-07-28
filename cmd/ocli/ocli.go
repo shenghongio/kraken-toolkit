@@ -7,6 +7,6 @@ var OcliCmd = &cobra.Command{
 	Short: "Operations CLI - Diagnostics and troubleshooting",
 }
 
-func init() {
-	oc
-}
+//func init() {
+//	oc
+//}

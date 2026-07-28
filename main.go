@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/kraken-pedestal/cmd"
 	"github.com/kraken-pedestal/pkg/logger"
 	"os"
@@ -9,21 +10,27 @@ import (
 
 func main() {
 
-	// 1. 初始化默认 logger（保证所有输出格式统一）
+	// 1. 初始化后备日志（仅用于 PreRun 之前的错误，如未知命令、标志解析失败）
 	if err := logger.Init(&logger.Config{
-		Level:      logger.LevelInfo,
+		Level:      logger.LevelDebug, // 更详细的信息便于调试
 		Format:     logger.FormatText,
 		OutputPath: "stderr",
 		NoColor:    true, // 默认无颜色，后续可被覆盖
 	}); err != nil {
-		// 如果初始化失败，直接 panic（因为日志是关键组件）
-		panic(err)
+		// 若后备日志初始化失败，只能 panic（日志是关键组件）
+		panic(fmt.Sprintf("failed to init fallback logger: %v", err))
+
 	}
 
 	// 优雅处理 panic
 	defer func() {
 		if r := recover(); r != nil {
-			logger.Error("程序发生 panic", "panic", r)
+			// 尝试用logger记录 若logger不可用则降级到stderr
+			if logger.Default() != nil {
+				logger.Error("程序发生 panic", "panic", r)
+			} else {
+				fmt.Fprintf(os.Stderr, "panic: %v\n", r)
+			}
 			os.Exit(1)
 		}
 	}()
