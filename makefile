@@ -17,10 +17,10 @@ BUILD_TIME  := $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 # ---- 包路径（与 version.go 所在包一致） ----
 PKG_VERSION := github.com/kraken-pedestal/internal/deploy/executor
 
-LDFLAGS := -X '$(PKG_VERSION).Version=$(VERSION)' \
-           -X '$(PKG_VERSION).GitCommit=$(GIT_COMMIT)' \
-           -X '$(PKG_VERSION).GitBranch=$(GIT_BRANCH)' \
-           -X '$(PKG_VERSION).BuildTime=$(BUILD_TIME)'
+LDFLAGS := -X '$(PKG_VERSION).version=$(VERSION)' \
+           -X '$(PKG_VERSION).gitCommit=$(GIT_COMMIT)' \
+           -X '$(PKG_VERSION).gitBranch=$(GIT_BRANCH)' \
+           -X '$(PKG_VERSION).buildTime=$(BUILD_TIME)'
 
 # ---- 本机构建默认目标 ----
 GOOS   ?= $(shell go env GOOS)

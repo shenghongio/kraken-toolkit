@@ -9,19 +9,21 @@ import (
 )
 
 func main() {
-
+	
 	// 1. 初始化后备日志（仅用于 PreRun 之前的错误，如未知命令、标志解析失败）
-	if err := logger.Init(&logger.Config{
-		Level:      logger.LevelDebug, // 更详细的信息便于调试
-		Format:     logger.FormatText,
-		OutputPath: "stderr",
-		NoColor:    true, // 默认无颜色，后续可被覆盖
+	// 注意：必须提供有效的级别和至少一个输出目标（控制台）
+	if err := logger.Init(logger.Config{
+		Level:         logger.LevelInfo,
+		Console:       true,
+		ConsoleOutput: "stderr",
+		ConsoleFormat: logger.ConsoleFormatText,
+		File:          "",
+		AddSource:     false,
 	}); err != nil {
 		// 若后备日志初始化失败，只能 panic（日志是关键组件）
 		panic(fmt.Sprintf("failed to init fallback logger: %v", err))
-
 	}
-
+	
 	// 优雅处理 panic
 	defer func() {
 		if r := recover(); r != nil {
@@ -34,9 +36,9 @@ func main() {
 			os.Exit(1)
 		}
 	}()
-
+	
 	rootCmd := cmd.NewRootCmd()
-
+	
 	if err := rootCmd.Execute(); err != nil {
 		// 错误已在命令中通过 logger 记录（子命令中使用了 os.Exit），
 		// 但根命令级别（如未知子命令、标志错误）会在这里被捕获。

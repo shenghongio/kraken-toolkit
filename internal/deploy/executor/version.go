@@ -11,16 +11,16 @@ import (
 var (
 	// Version 版本号
 	version = "dev"
-
+	
 	// GitCommit Git提交哈希
 	gitCommit = "unknown"
-
+	
 	// GitBranch Git分支
 	gitBranch = "unknown"
-
+	
 	// BuildTime 编译时间
 	buildTime = "unknown"
-
+	
 	// GoVersion Go版本
 	goVersion = runtime.Version()
 )
@@ -50,9 +50,9 @@ func Get() VersionInfo {
 }
 
 // String 返回版本字符串
-func String() string {
+func PrintString() string {
 	info := Get()
-	return fmt.Sprintf("sysint version %s (commit: %s, branch: %s, build: %s, %s/%s)",
+	return fmt.Sprintf("kraken version %s (commit: %s, branch: %s, build: %s, %s/%s)",
 		info.Version,
 		info.GitCommit,
 		info.GitBranch,
