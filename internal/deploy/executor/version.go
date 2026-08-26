@@ -1,31 +1,32 @@
-package version
+package executor
 
 import (
 	"fmt"
 	"runtime"
+	"strings"
 	"time"
 )
 
 // 版本信息，通过ldflags在编译时注入
 var (
 	// Version 版本号
-	Version = "dev"
-
+	version = "dev"
+	
 	// GitCommit Git提交哈希
-	GitCommit = "unknown"
-
+	gitCommit = "unknown"
+	
 	// GitBranch Git分支
-	GitBranch = "unknown"
-
+	gitBranch = "unknown"
+	
 	// BuildTime 编译时间
-	BuildTime = "unknown"
-
+	buildTime = "unknown"
+	
 	// GoVersion Go版本
-	GoVersion = runtime.Version()
+	goVersion = runtime.Version()
 )
 
 // BuildInfo 构建信息
-type BuildInfo struct {
+type VersionInfo struct {
 	Version   string `json:"version"`
 	GitCommit string `json:"git_commit"`
 	GitBranch string `json:"git_branch"`
@@ -36,22 +37,22 @@ type BuildInfo struct {
 }
 
 // Get 获取版本信息
-func Get() BuildInfo {
-	return BuildInfo{
-		Version:   Version,
-		GitCommit: GitCommit,
-		GitBranch: GitBranch,
-		BuildTime: BuildTime,
-		GoVersion: GoVersion,
+func Get() VersionInfo {
+	return VersionInfo{
+		Version:   version,
+		GitCommit: gitCommit,
+		GitBranch: gitBranch,
+		BuildTime: buildTime,
+		GoVersion: goVersion,
 		OS:        runtime.GOOS,
 		Arch:      runtime.GOARCH,
 	}
 }
 
 // String 返回版本字符串
-func String() string {
+func PrintString() string {
 	info := Get()
-	return fmt.Sprintf("sysint version %s (commit: %s, branch: %s, build: %s, %s/%s)",
+	return fmt.Sprintf("kraken version %s (commit: %s, branch: %s, build: %s, %s/%s)",
 		info.Version,
 		info.GitCommit,
 		info.GitBranch,
@@ -61,18 +62,14 @@ func String() string {
 	)
 }
 
-// Short 返回简短版本字符串
-func Short() string {
-	return fmt.Sprintf("sysint/%s", Version)
-}
-
-// IsDev 是否是开发版本
+// IsDev 判断是否为开发版本（版本号包含 "dev" 或未设置）
 func IsDev() bool {
-	return Version == "dev" || Version == "unknown"
+	// 如果版本号是 "dev" 或包含 "-dev" 后缀（常见于预发布版本），视为开发版
+	return strings.Contains(version, "dev") || version == "dev"
 }
 
 // GetBuildTime 解析构建时间
-func (b BuildInfo) GetBuildTime() (time.Time, error) {
+func (b VersionInfo) GetBuildTime() (time.Time, error) {
 	if b.BuildTime == "unknown" {
 		return time.Time{}, fmt.Errorf("build time unknown")
 	}

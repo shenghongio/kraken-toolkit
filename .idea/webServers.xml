@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="ff0f92ec-0cc3-4523-80aa-5b9c8391f354" name="dc138">
+        <fileTransfer rootFolder="/home/sketc" accessType="SFTP" host="10.32.9.138" port="22" sshConfigId="19923859-9f66-4642-97a9-f51e151a7e4b" sshConfig="sketc@10.32.9.138:22 key" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="1000000" passiveMode="true" shareSSLContext="true" isUseRsync="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

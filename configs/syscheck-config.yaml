@@ -1,0 +1,97 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: syscheck-defaults
+  namespace: kube-system
+data:
+  checklist:
+    # sysctl 默认值
+    - type: "sysctl"
+      name: "net.bridge.bridge-nf-call-iptables"
+      enabled: true
+      value: 1
+      description: "桥接网络流量必须经过 iptables"
+    - type: "sysctl"
+      name: "vm.swappiness"
+      enabled: true
+      value: 0
+      description: "关闭 swap"
+
+    # ulimit 默认值
+    - type: "ulimit"
+      name: "nofile"
+      enabled: true
+      soft: 65536
+      hard: 65536
+      description: "最大文件句柄数"
+    - type: "ulimit"
+      name: "nproc"
+      enabled: true
+      soft: 65536
+      hard: 65536
+      description: "最大进程数"
+
+    # 内核
+    - type: "kernel"
+      name: "version"
+      enabled: true
+      value: ">=5.4"
+      description: "Linux 内核版本"
+
+    # cgroup
+    - type: "cgroup"
+      name: "driver"
+      enabled: true
+      value: "systemd"
+      description: "cgroup 驱动"
+
+    # 容器运行时
+    - type: "containerRuntime"
+      name: "docker"
+      enabled: true
+      description: "Docker 已安装"
+    - type: "containerRuntime"
+      name: "containerd"
+      enabled: true
+      description: "Containerd 已安装"
+
+    # 端口
+    - type: "port"
+      name: "apiServer"
+      enabled: true
+      value: 6443
+      description: "K8s API Server 端口"
+    - type: "port"
+      name: "etcd"
+      enabled: true
+      value: [2379, 2380]
+      description: "etcd 服务端口"
+
+    # 系统资源
+    - type: "system"
+      name: "cpu"
+      enabled: true
+      value: 4
+      description: "控制平面节点最少 CPU 核数"
+    - type: "system"
+      name: "memory"
+      enabled: true
+      value: "8Gi"
+      description: "控制平面节点最少内存"
+    - type: "system"
+      name: "disk"
+      enabled: true
+      value: "50Gi"
+      description: "控制平面节点最少磁盘"
+
+    # 存储
+    - type: "storage"
+      name: "defaultStorageClass"
+      enabled: true
+      value: "standard"
+      description: "默认存储类必须存在"
+    - type: "storage"
+      name: "mountPoints"
+      enabled: true
+      value: ["/var/lib/kubelet", "/var/lib/etcd"]
+      description: "重要目录必须挂载"
