@@ -9,23 +9,14 @@ import (
 
 // 版本信息，通过ldflags在编译时注入
 var (
-	// Version 版本号
-	version = "dev"
-	
-	// GitCommit Git提交哈希
+	version   = "dev"
 	gitCommit = "unknown"
-	
-	// GitBranch Git分支
 	gitBranch = "unknown"
-	
-	// BuildTime 编译时间
 	buildTime = "unknown"
-	
-	// GoVersion Go版本
 	goVersion = runtime.Version()
 )
 
-// BuildInfo 构建信息
+// VersionInfo  构建信息
 type VersionInfo struct {
 	Version   string `json:"version"`
 	GitCommit string `json:"git_commit"`
@@ -49,7 +40,7 @@ func Get() VersionInfo {
 	}
 }
 
-// String 返回版本字符串
+// PrintString  返回版本字符串
 func PrintString() string {
 	info := Get()
 	return fmt.Sprintf("kraken version %s (commit: %s, branch: %s, build: %s, %s/%s)",
