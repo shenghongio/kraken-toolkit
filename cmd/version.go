@@ -9,27 +9,27 @@ import (
 
 // VersionCmd  版本命令
 func VersionCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:  "version",
-		RunE: runVersion,
+	return &cobra.Command{
+		Use:     "version",
+		Short:   "Print kraken version information",
+		GroupID: GroupOther,
+		RunE:    runVersion,
 	}
-	
 	// 添加命令行标志
-	cmd.Flags().Bool("json", false, "Output version information in JSON format")
-	
-	return cmd
+	//cmd.Flags().Bool("json", false, "Output version information in JSON format")
+	//return nil
 }
 
 // runVersion 执行版本命令
 func runVersion(cmd *cobra.Command, args []string) error {
 	jsonoutput, err := cmd.Flags().GetBool("json")
-	
+
 	if err != nil {
 		return fmt.Errorf("failed to retrieve JSON flag: %w", err)
 	}
-	
+
 	info := executor.Get()
-	
+
 	if jsonoutput {
 		jsonData, err := json.MarshalIndent(info, "", "  ")
 		if err != nil {
@@ -38,10 +38,10 @@ func runVersion(cmd *cobra.Command, args []string) error {
 		fmt.Println(string(jsonData))
 		return nil
 	}
-	
+
 	// 默认输出格式
 	printVersionInfo(info)
-	
+
 	return nil
 }
 
@@ -56,7 +56,7 @@ func printVersionInfo(info executor.VersionInfo) {
 	fmt.Printf("BuildTime:  %s\n", buildTimeDisplay)
 	fmt.Printf("GoVersion:  %s\n", info.GoVersion)
 	fmt.Printf("OS/Arch:    %s/%s\n", info.OS, info.Arch)
-	
+
 	// 开发版本警告精简为一行（可选）
 	if executor.IsDev() {
 		fmt.Printf("(Development build)\n")
