@@ -17,9 +17,9 @@ func NewBasicCmd() *cobra.Command {
 	// 为子命令设置组
 	cmd.AddGroup(&cobra.Group{
 		ID:    "basic-sub",
-		Title: "Basic Subcommands:",
+		Title: "Basic Subcommands",
 	})
-	
+
 	infoCmd := NewSystemInfo()
 	infoCmd.GroupID = "basic-sub"
 	cmd.AddCommand(infoCmd)
@@ -39,7 +39,7 @@ func NewSystemInfo() *cobra.Command {
 			return selectoroutput(systemInfo, output)
 		},
 	}
-	
+
 	cmd.Flags().StringVarP(&output, "output", "o", "table", "Output format. One of: json|yaml|table")
 	return cmd
 }

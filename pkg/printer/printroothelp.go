@@ -40,14 +40,39 @@ func PrintRootHelp(out io.Writer, command *cobra.Command) {
 	fmt.Fprintln(out, command.PersistentFlags().FlagUsages())
 	
 	// Help hint
-	fmt.Fprintf(
-		out,
-		"Use %s <command> --help\" for more information about a given command.\n",
-		command.Name(),
-	)
+	fmt.Fprintf(out, "Use %s <command> --help\" for more information about a given command.\n", command.Name())
 }
 
-func PrintCommandHelp(out io.Writer, command *cobra.Command) {
+func PrintSubCommandHelp(out io.Writer, command *cobra.Command) {
+	
+	// 当前命令描述
+	if command.Short != "" {
+		fmt.Fprintln(out, command.Short)
+		fmt.Fprintln(out)
+	}
+	
+	// 如果存在子命令，先打印子命令分组
+	if command.HasAvailableSubCommands() {
+		firstGroup := true
+		
+		for _, group := range command.Groups() {
+			commands := availableCommandsByGroup(command, group.ID)
+			if len(commands) == 0 {
+				continue
+			}
+			if !firstGroup {
+				fmt.Fprintln(out)
+			}
+			fmt.Fprintf(out, "%s:\n", group.Title)
+			for _, c := range commands {
+				fmt.Fprintf(out, "  %-12s%s\n", c.Name(), c.Short)
+			}
+			firstGroup = false
+		}
+		
+		// 子命令列表和Usage之间的空格
+		fmt.Fprintln(out)
+	}
 	// Usage
 	fmt.Fprintln(out, "Usage:")
 	fmt.Fprintf(out, "  %s\n", command.UseLine())
@@ -80,7 +105,7 @@ func PrintCommandHelp(out io.Writer, command *cobra.Command) {
 
 func availableCommandsByGroup(command *cobra.Command, groupid string) []*cobra.Command {
 	var commands []*cobra.Command
-	for _, cmd := range commands {
+	for _, cmd := range command.Commands() {
 		if !cmd.IsAvailableCommand() {
 			continue
 		}

@@ -116,18 +116,18 @@ func NewRootCmd() *cobra.Command {
 	cmd.SetHelpFunc(func(command *cobra.Command, args []string) {
 		out := cmd.OutOrStdout()
 
-		// Description
-		fmt.Fprintln(out, cmd.Short)
-		fmt.Fprintln(out)
-
 		// root command
 		if command == command.Root() {
+			// Description
+			fmt.Fprintln(out, cmd.Short)
+			fmt.Fprintln(out)
+
 			printer.PrintRootHelp(out, command)
 			return
 		}
 
 		// Subcommand
-		printer.PrintCommandHelp(out, command)
+		printer.PrintSubCommandHelp(out, command)
 	})
 	return cmd
 }
