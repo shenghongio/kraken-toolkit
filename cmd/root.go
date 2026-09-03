@@ -49,23 +49,21 @@ const (
 	GroupCluster         = "cluster"
 	GroupTroubleshooting = "troubleshooting"
 	GroupNetwork         = "network"
-	GroupSystem          = "system"
+	GroupBasic           = "basic"
 	GroupSettings        = "settings"
 	GroupOther           = "other"
 )
 
-// create the root command
+// NewRootCmd create the root command
 func NewRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:           "kraken",
-		Short:         "Kubernetes deployment and operations CLI",
+		Short:         "Kraken is a unified CLI tool for deploying and operating Kubernetes clusters and middleware.",
 		SilenceErrors: true,
 		SilenceUsage:  true,
-		Long:          `Kraken is a unified CLI tool for deploying and operating Kubernetes clusters and middleware.`,
+		//Long:          `Kraken is a unified CLI tool for deploying and operating Kubernetes clusters and middleware.`,
 
 		RunE: func(cmd *cobra.Command, args []string) error {
-			//fmt.Printf(AsciiLogo)
-			fmt.Println()
 			return cmd.Help()
 		},
 
@@ -75,28 +73,62 @@ func NewRootCmd() *cobra.Command {
 		},
 	}
 
-	// Custom help information
-	//cmd.HelpTemplate() = printer.HelpTemplate
-	cmd.SetUsageTemplate(printer.HelpTemplate)
+	// Disable Cobra's auto-generated completion
+	cmd.CompletionOptions.DisableDefaultCmd = true
+
 	// Global Flags
-	cmd.PersistentFlags().String("log-level", "info", "日志级别 [debug|info|warn|error|fatal]")
-	cmd.PersistentFlags().Bool("log-source", false, "日志中包含代码位置 (文件:行号)")
-	cmd.PersistentFlags().BoolP("version", "v", false, "Display detailed version information")
+	cmd.PersistentFlags().String(
+		"log-level",
+		"info",
+		"log level [debug|info|warn|error|fatal]",
+	)
+	cmd.PersistentFlags().Bool(
+		"log-source",
+		false,
+		"The log includes code locations (file:line number)",
+	)
 
 	// Command Groups
-
 	cmd.AddGroup(
-		&cobra.Group{ID: GroupDeploy, Title: "Deploy Commands:"},
-		&cobra.Group{ID: GroupCluster, Title: "Cluster Management Commands:"},
-		&cobra.Group{ID: GroupTroubleshooting, Title: "Troubleshoot Commands:"},
-		&cobra.Group{ID: GroupNetwork, Title: "Network Commands:"},
-		&cobra.Group{ID: GroupSystem, Title: "System Commands:"},
-		&cobra.Group{ID: GroupSettings, Title: "Settings Commands:"},
-		&cobra.Group{ID: GroupOther},
+		//&cobra.Group{ID: GroupDeploy, Title: "Deploy Commands:"},
+		&cobra.Group{
+			ID:    GroupBasic,
+			Title: "Basic Commands",
+		},
+		&cobra.Group{
+			ID:    GroupSettings,
+			Title: "Settings Commands",
+		},
+		&cobra.Group{
+			ID:    GroupOther,
+			Title: "Other Commands",
+		},
 	)
 
 	// Commands
-	cmd.AddCommand(NewSystemCmd(), VersionCmd())
+	cmd.AddCommand(
+		NewBasicCmd(),
+		VersionCmd(),
+		NewCompletionCmd(),
+	)
+
+	// Custom help information
+	cmd.SetHelpFunc(func(command *cobra.Command, args []string) {
+		out := cmd.OutOrStdout()
+
+		// Description
+		fmt.Fprintln(out, cmd.Short)
+		fmt.Fprintln(out)
+
+		// root command
+		if command == command.Root() {
+			printer.PrintRootHelp(out, command)
+			return
+		}
+
+		// Subcommand
+		printer.PrintCommandHelp(out, command)
+	})
 	return cmd
 }
 

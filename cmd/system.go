@@ -8,20 +8,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewSystemCmd() *cobra.Command {
+func NewBasicCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "system",
+		Use:     "basic",
 		Short:   "Inspect and diagnose system resources",
-		GroupID: GroupSystem,
-
-		Example: `  #  Display system information
-kraken system info
-# Display system information in JSON format
-kraken system info --json
-		`,
+		GroupID: "basic",
 	}
-
-	cmd.AddCommand(NewSystemInfo())
+	// 为子命令设置组
+	cmd.AddGroup(&cobra.Group{
+		ID:    "basic-sub",
+		Title: "Basic Subcommands:",
+	})
+	
+	infoCmd := NewSystemInfo()
+	infoCmd.GroupID = "basic-sub"
+	cmd.AddCommand(infoCmd)
 	return cmd
 }
 
@@ -29,7 +30,7 @@ func NewSystemInfo() *cobra.Command {
 	var output string
 	cmd := &cobra.Command{
 		Use:   "info",
-		Short: "Display system information kraken system info",
+		Short: "Display system information",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			systemInfo, err := system.GetSystemInfo()
 			if err != nil {
@@ -38,7 +39,7 @@ func NewSystemInfo() *cobra.Command {
 			return selectoroutput(systemInfo, output)
 		},
 	}
-
+	
 	cmd.Flags().StringVarP(&output, "output", "o", "table", "Output format. One of: json|yaml|table")
 	return cmd
 }

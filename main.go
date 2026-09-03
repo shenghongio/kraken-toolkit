@@ -36,6 +36,7 @@ func main() {
 
 	if err := rootCmd.Execute(); err != nil {
 
+		handleError(err)
 	}
 }
 
@@ -48,7 +49,7 @@ func handleError(err error) {
 	var appErr *logger.Error
 	if errors.As(err, &appErr) {
 		slog.Error(appErr.Message, "error", appErr.Err, "code", appErr.Code.String())
-		os.Exit(exitCode(logger.CodeUnknown))
+		os.Exit(exitCode(appErr.Code))
 	}
 }
 
