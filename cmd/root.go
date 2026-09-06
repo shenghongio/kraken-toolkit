@@ -1,58 +1,16 @@
 package cmd
 
 import (
-	_ "embed"
 	"fmt"
+	"github.com/kraken-pedestal/cmd/basic"
+	"github.com/kraken-pedestal/pkg/cli"
 	"github.com/kraken-pedestal/pkg/logger"
 	"github.com/kraken-pedestal/pkg/printer"
 	"github.com/spf13/cobra"
 	"log/slog"
 )
 
-var AsciiLogo string
-
-//func NewRootCmd() *cobra.Command {
-//	cmd := &cobra.Command{
-//		Use: "kraken",
-//		Long: `Kraken is a unified CLI tool for deploying and operating Kubernetes clusters and middleware.
-//
-//  kraken dcli  - Deployment CLI (Build): Install K8s, deploy middleware
-//  kraken ocli  - Operations CLI (Fix): Diagnose network, pods, and systems
-//  kraken version  - Print kraken version information`,
-//
-//		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-//			return initLogger(cmd)
-//		},
-//		RunE: func(cmd *cobra.Command, args []string) error {
-//			if showVersion, _ := cmd.Flags().GetBool("version"); showVersion {
-//				fmt.Println(executor.PrintString())
-//				return nil
-//			}
-//			fmt.Print(AsciiLogo)
-//			return cmd.Help()
-//		},
-//	}
-//
-//	cmd.Flags().BoolP("version", "v", false, "Display detailed information of the current version")
-//	cmd.PersistentFlags().String("log-level", "info", "日志级别 (debug, info, warn, error)")
-//	cmd.PersistentFlags().Bool("log-source", false, "在日志中包含代码位置 (文件:行号)")
-//
-//	cmd.AddCommand(VersionCmd())
-//	cmd.SilenceErrors = true
-//	cmd.SilenceUsage = true
-//	return cmd
-//}
-
-// Command Group
-const (
-	GroupDeploy          = "deploy"
-	GroupCluster         = "cluster"
-	GroupTroubleshooting = "troubleshooting"
-	GroupNetwork         = "network"
-	GroupBasic           = "basic"
-	GroupSettings        = "settings"
-	GroupOther           = "other"
-)
+//var AsciiLogo string
 
 // NewRootCmd create the root command
 func NewRootCmd() *cobra.Command {
@@ -92,22 +50,22 @@ func NewRootCmd() *cobra.Command {
 	cmd.AddGroup(
 		//&cobra.Group{ID: GroupDeploy, Title: "Deploy Commands:"},
 		&cobra.Group{
-			ID:    GroupBasic,
+			ID:    cli.GroupBasic,
 			Title: "Basic Commands",
 		},
 		&cobra.Group{
-			ID:    GroupSettings,
+			ID:    cli.GroupSettings,
 			Title: "Settings Commands",
 		},
 		&cobra.Group{
-			ID:    GroupOther,
+			ID:    cli.GroupOther,
 			Title: "Other Commands",
 		},
 	)
 
 	// Commands
 	cmd.AddCommand(
-		NewBasicCmd(),
+		basic.NewBasicCmd(),
 		VersionCmd(),
 		NewCompletionCmd(),
 	)

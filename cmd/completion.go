@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/kraken-pedestal/pkg/cli"
+
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -20,7 +22,7 @@ Example:
   kraken completion bash > /etc/bash_completion.d/kraken
   kraken completion zsh > "${fpath[1]}/_kraken"
 `,
-		GroupID: GroupSettings,
+		GroupID: cli.GroupSettings,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
 				return fmt.Errorf("requires a shell type (bash, zsh)")

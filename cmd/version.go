@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/kraken-pedestal/internal/deploy/executor"
+	"github.com/kraken-pedestal/pkg/cli"
 	"github.com/spf13/cobra"
 )
 
@@ -12,7 +13,7 @@ func VersionCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:     "version",
 		Short:   "Print kraken version information",
-		GroupID: GroupOther,
+		GroupID: cli.GroupOther,
 		RunE:    runVersion,
 	}
 	// 添加命令行标志
