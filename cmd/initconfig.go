@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"github.com/kraken-pedestal/pkg/cli"
-
 	"github.com/spf13/cobra"
 	"os"
 )

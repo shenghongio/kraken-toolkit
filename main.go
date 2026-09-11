@@ -6,6 +6,7 @@ import (
 	"github.com/kraken-pedestal/pkg/logger"
 	"log/slog"
 	"os"
+	"runtime/debug"
 )
 
 func main() {
@@ -26,7 +27,7 @@ func main() {
 	// Panic recovery
 	defer func() {
 		if r := recover(); r != nil {
-			logger.Default().Error("程序发生 Panic", "panic", r)
+			logger.Default().Error("程序发生 Panic", "panic", r, "stack", string(debug.Stack()))
 			os.Exit(1)
 		}
 	}()

@@ -25,7 +25,6 @@
   <img src="https://cdn.simpleicons.org/go" width="36" alt="Go">
   <img src="https://cdn.simpleicons.org/helm" width="36" alt="Helm">
   <img src="https://cdn.simpleicons.org/linux" width="36" alt="Linux">
-  <img src="https://cdn.simpleicons.org/openai" width="36" alt="AI">
   <img src="https://cdn.simpleicons.org/nvidia" width="36" alt="NVIDIA">
 </p>
 

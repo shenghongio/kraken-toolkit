@@ -29,6 +29,14 @@ func NewBasicCmd() *cobra.Command {
 	registerBasicFlags(cmd)
 
 	// Register Basic sub command
-	cmd.AddCommand()
+	cmd.AddCommand(
+	//NewShellCmd(),
+	//NewCopyCmd(),
+	//NewFetchCmd(),
+	//NewScriptCmd(),
+	//NewPingCmd(),
+	//NewCheckCmd(),
+
+	)
 	return cmd
 }

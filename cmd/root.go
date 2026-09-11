@@ -5,12 +5,10 @@ import (
 	"github.com/kraken-pedestal/cmd/basic"
 	"github.com/kraken-pedestal/pkg/cli"
 	"github.com/kraken-pedestal/pkg/logger"
-	"github.com/kraken-pedestal/pkg/printer"
+	"github.com/kraken-pedestal/utils"
 	"github.com/spf13/cobra"
 	"log/slog"
 )
-
-//var AsciiLogo string
 
 // NewRootCmd create the root command
 func NewRootCmd() *cobra.Command {
@@ -27,14 +25,33 @@ func NewRootCmd() *cobra.Command {
 
 		// Global logger initialization
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			return initLogger(cmd)
+			// 1.初始化日志
+			if err := initLogger(cmd); err != nil {
+				return err
+			}
+
+			//2. 加载全局配置
+			//if err := loadConfig(); err != nil {
+			//	return err
+			//}
+			return nil
 		},
+
+		// 加载全局配置文件
+
 	}
 
 	// Disable Cobra's auto-generated completion
 	cmd.CompletionOptions.DisableDefaultCmd = true
 
 	// Global Flags
+
+	//cmd.PersistentFlags().StringVar(
+	//	&globalFlags.Config,
+	//	"config",
+	//	"",
+	//	"config file path",
+	//)
 	cmd.PersistentFlags().String(
 		"log-level",
 		"info",
@@ -79,13 +96,12 @@ func NewRootCmd() *cobra.Command {
 			// Description
 			fmt.Fprintln(out, cmd.Short)
 			fmt.Fprintln(out)
-
-			printer.PrintRootHelp(out, command)
+			utils.PrintRootHelp(out, command)
 			return
 		}
 
 		// Subcommand
-		printer.PrintSubCommandHelp(out, command)
+		utils.PrintCommandHelp(out, command)
 	})
 	return cmd
 }
