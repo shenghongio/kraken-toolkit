@@ -256,12 +256,36 @@ check: fmt-check vet ## 执行格式检查和静态检查
 
 test: ## 执行单元测试
 	@printf "$(COLOR_GREEN)执行单元测试...$(COLOR_RESET)\n"
-	@if $(GO) test ./...; then \
+	@printf "$(COLOR_CYAN)  命令: $(GO) test -v -count=1 ./...$(COLOR_RESET)\n"
+	@printf "$(COLOR_CYAN)  参数: -v (详细输出) | -count=1 (禁用测试缓存)$(COLOR_RESET)\n"
+	@printf "$(COLOR_BLUE)───────────────────────────────────────────────────────────────$(COLOR_RESET)\n"
+	@set -o pipefail; \
+	if $(GO) test -v -count=1 ./... 2>&1 | tee /tmp/kraken_test_output.log; then \
+		printf "$(COLOR_BLUE)───────────────────────────────────────────────────────────────$(COLOR_RESET)\n"; \
+		PASS_COUNT=$$(grep -c -- '--- PASS' /tmp/kraken_test_output.log); \
+		FAIL_COUNT=$$(grep -c -- '--- FAIL' /tmp/kraken_test_output.log); \
+		SKIP_COUNT=$$(grep -c -- '--- SKIP' /tmp/kraken_test_output.log); \
+		PKG_COUNT=$$(grep -E '^(ok|FAIL)\s' /tmp/kraken_test_output.log | wc -l | tr -d ' '); \
+		printf "$(COLOR_YELLOW)  测试包数: $$PKG_COUNT$(COLOR_RESET)\n"; \
+		printf "$(COLOR_GREEN)  通过 (PASS): $$PASS_COUNT$(COLOR_RESET)\n"; \
+		if [ "$$FAIL_COUNT" -gt 0 ]; then \
+			printf "$(COLOR_RED)  失败 (FAIL): $$FAIL_COUNT$(COLOR_RESET)\n"; \
+		fi; \
+		if [ "$$SKIP_COUNT" -gt 0 ]; then \
+			printf "$(COLOR_YELLOW)  跳过 (SKIP): $$SKIP_COUNT$(COLOR_RESET)\n"; \
+		fi; \
 		printf "$(COLOR_GREEN)✓ 单元测试通过$(COLOR_RESET)\n"; \
 	else \
+		printf "$(COLOR_BLUE)───────────────────────────────────────────────────────────────$(COLOR_RESET)\n"; \
+		FAIL_COUNT=$$(grep -c -- '--- FAIL' /tmp/kraken_test_output.log); \
+		printf "$(COLOR_RED)  失败 (FAIL): $$FAIL_COUNT$(COLOR_RESET)\n"; \
+		printf "$(COLOR_RED)  失败的测试详情：$(COLOR_RESET)\n"; \
+		grep -- '--- FAIL' /tmp/kraken_test_output.log | sed 's/^/    /'; \
 		printf "$(COLOR_RED)✗ 单元测试失败$(COLOR_RESET)\n"; \
+		printf "$(COLOR_YELLOW)  完整日志已保存至: /tmp/kraken_test_output.log$(COLOR_RESET)\n"; \
 		exit 1; \
 	fi
+	@rm -f /tmp/kraken_test_output.log
 
 
 # ============================================================================
