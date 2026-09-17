@@ -1,23 +1,27 @@
 package config
 
 type BasicConfig struct {
-	HostInventory    map[string][]string `yaml:"host_inventory"`
-	Concurrency      int                 `yaml:"concurrency"`
-	SSH              BasicSSHConfig      `yaml:"ssh"`
-	DefaultFetchPath string              `yaml:"default_fetch_path"`
-	History          BasicConfigHistory  `yaml:"history"`
-}
-
-type BasicSSHConfig struct {
-	SSHPort     int    `yaml:"ssh_port"`
-	SSHUser     string `yaml:"ssh_user"`
-	SSHPassword string `yaml:"ssh_password"`
-	SSHHost     string `yaml:"ssh_host"`
-	SSHTimeout  int    `yaml:"ssh_timeout"`
-	PrivateKey  string `yaml:"private_key"`
+	HostInventory  bool               `yaml:"host_inventory"`
+	User           string             `yaml:"user"`
+	PrivateKeyPath string             `yaml:"private_key_path"`
+	IPList         []string           `yaml:"iplist"`
+	Concurrency    int                `yaml:"concurrency"`
+	Timeout        int                `yaml:"timeout"`
+	RetryFile      string             `yaml:"retry_file"`
+	Limit          string             `yaml:"limit"`
+	Output         string             `yaml:"output"`
+	Quiet          bool               `yaml:"quiet"`
+	DryRun         bool               `yaml:"dry_run"`
+	History        BasicConfigHistory `yaml:"history"`
+	PublicKeyPath  string             `yaml:"public_key_path"`
+	Bootstrap      BootstrapConfig    `yaml:"bootstrap"`
 }
 
 type BasicConfigHistory struct {
 	Enabled bool   `yaml:"enabled"`
 	Log     string `yaml:"log"`
+}
+
+type BootstrapConfig struct {
+	User string `yaml:"user"`
 }

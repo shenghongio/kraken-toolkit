@@ -69,6 +69,14 @@ func PrintCommandHelp(out io.Writer, command *cobra.Command) {
 	// Subcommands
 	if command.HasAvailableSubCommands() {
 		fmt.Fprintln(out)
+		fmt.Fprintln(out, "Subcommands:")
+		for _, cmd := range command.Commands() {
+			if !cmd.IsAvailableCommand() {
+				continue
+			}
+			fmt.Fprintf(out, "  %-12s%s\n", cmd.Name(), cmd.Short)
+		}
+		fmt.Fprintln(out)
 		fmt.Fprintf(
 			out,
 			`Use "%s <command> --help" for more information about a given command.`,
@@ -90,4 +98,13 @@ func availableCommandsByGroup(command *cobra.Command, groupid string) []*cobra.C
 		commands = append(commands, cmd)
 	}
 	return commands
+}
+
+// PrintUsage 统一打印命令使用提示
+func PrintUsage(cmd *cobra.Command, msg string) {
+	cmd.Help()
+	fmt.Println()
+	if msg != "" {
+		fmt.Println(msg)
+	}
 }

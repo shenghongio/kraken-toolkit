@@ -31,20 +31,16 @@ func NewRootCmd() *cobra.Command {
 		// Global logger initialization
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 
+			// 1.初始化日志
+			if err := initLogger(cmd); err != nil {
+				return err
+			}
 			//2. 加载全局配置
 			if err := loadConfig(cmd); err != nil {
 				return err
 			}
-			// 2.初始化日志
-			if err := initLogger(cmd); err != nil {
-				return err
-			}
-
 			return nil
 		},
-
-		// 加载全局配置文件
-
 	}
 
 	// Disable Cobra's auto-generated completion
@@ -154,10 +150,6 @@ func loadConfig(cmd *cobra.Command) error {
 	// 把 config 注入 context 供子命令读取
 	ctx := context.WithValue(cmd.Context(), config.ContextKeyConfig, cfg)
 	cmd.SetContext(ctx)
-	slog.Debug("loaded config",
-		"ssh_user", cfg.Basic.SSH.SSHUser,
-		"ssh_port", cfg.Basic.SSH.SSHPort,
-		"ssh_timeout", cfg.Basic.SSH.SSHTimeout,
-	)
+	slog.Debug("loaded config", "user", cfg.Basic.User, "private_key_path", cfg.Basic.PrivateKeyPath, "concurrency", cfg.Basic.Concurrency, "iplist", cfg.Basic.IPList)
 	return nil
 }

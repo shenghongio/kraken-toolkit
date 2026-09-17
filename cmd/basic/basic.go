@@ -35,12 +35,18 @@ func NewBasicCmd() *cobra.Command {
 		slog.Debug("shell command", "use", shellCmd.Use)
 	}
 
+	addUserCmd := NewAddUserCmd()
+	if addUserCmd == nil {
+		slog.Debug("adduser command", "use", addUserCmd.Use)
+	}
+
 	// Register the shared parameters for all subcommands of the Basic module
 	registerBasicFlags(cmd)
 
 	// Register Basic sub command
 	cmd.AddCommand(
 		NewShellCmd(),
+		NewAddUserCmd(),
 		//NewCopyCmd(),
 		//NewFetchCmd(),
 		//NewScriptCmd(),
