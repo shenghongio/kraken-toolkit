@@ -22,10 +22,6 @@ type Host struct {
 	User    string
 	Port    int
 	Passwd  string
-
-	// Group 表示主机所属的 inventory group
-	// 一个Host 当前只记录一个group
-	Group string
 }
 
 func ParseFile(path string) ([]Host, error) {
@@ -89,7 +85,7 @@ func parseHostLine(line, group string) (Host, error) {
 		Address: parts[0],
 		User:    DefaultSSHUser,
 		Port:    DefaultSSHPort,
-		Group:   group,
+		//Group:   group,
 	}
 
 	if host.Address == "" {

@@ -3,6 +3,7 @@ package basic
 import (
 	"github.com/kraken-pedestal/pkg/cli"
 	"github.com/spf13/cobra"
+	"log/slog"
 )
 
 //NewBasicCmd Create the root Basic command.
@@ -20,9 +21,18 @@ import (
 
 func NewBasicCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "basic",
-		Short:   "Basic Commands",
-		GroupID: cli.GroupBasic,
+		Use:          "basic",
+		Short:        "Basic Commands",
+		GroupID:      cli.GroupBasic,
+		SilenceUsage: true,
+	}
+	slog.Debug("register basic subcommands")
+
+	shellCmd := NewShellCmd()
+	if shellCmd == nil {
+		slog.Error("shellCmd is nil")
+	} else {
+		slog.Debug("shell command", "use", shellCmd.Use)
 	}
 
 	// Register the shared parameters for all subcommands of the Basic module
@@ -30,12 +40,12 @@ func NewBasicCmd() *cobra.Command {
 
 	// Register Basic sub command
 	cmd.AddCommand(
-	//NewShellCmd(),
-	//NewCopyCmd(),
-	//NewFetchCmd(),
-	//NewScriptCmd(),
-	//NewPingCmd(),
-	//NewCheckCmd(),
+		NewShellCmd(),
+		//NewCopyCmd(),
+		//NewFetchCmd(),
+		//NewScriptCmd(),
+		//NewPingCmd(),
+		//NewCheckCmd(),
 
 	)
 	return cmd

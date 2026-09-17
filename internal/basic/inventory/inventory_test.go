@@ -21,7 +21,7 @@ func TestParseFile(t *testing.T) {
 [db]
 192.168.1.20 user=root port=2200
 `
-	
+
 	if err := os.WriteFile(path, []byte(content), 0600); err != nil {
 		t.Fatal(err)
 	}
@@ -32,7 +32,7 @@ func TestParseFile(t *testing.T) {
 	if len(host) != 4 {
 		t.Fatalf("expected 4 hosts got %d", len(host))
 	}
-	
+
 	tests := []struct {
 		name    string
 		host    Host
@@ -90,9 +90,9 @@ func TestParseFile(t *testing.T) {
 			if tt.host.Passwd != tt.passwd {
 				t.Errorf("Passwd %s, want %s", tt.host.Passwd, tt.passwd)
 			}
-			if tt.host.Group != tt.group {
-				t.Errorf("Group %s, want %s", tt.host.Group, tt.group)
-			}
+			//if tt.host.Group != tt.group {
+			//	t.Errorf("Group %s, want %s", tt.host.Group, tt.group)
+			//}
 		})
 	}
 }
@@ -134,19 +134,19 @@ func TestInventoryResolveGroup(t *testing.T) {
 				Address: "192.168.1.10",
 				User:    "root",
 				Port:    22,
-				Group:   "web",
+				//Group:   "web",
 			},
 			{
 				Address: "192.168.1.11",
 				User:    "admin",
 				Port:    2200,
-				Group:   "db",
+				//Group:   "db",
 			},
 			{
 				Address: "192.168.1.12",
 				User:    "test",
 				Port:    22,
-				Group:   "web",
+				//Group:   "web",
 			},
 		},
 	}
@@ -169,13 +169,13 @@ func TestInventoryResolveHost(t *testing.T) {
 				Address: "10.0.0.1",
 				User:    "root",
 				Port:    22,
-				Group:   "web",
+				//Group:   "web",
 			},
 			{
 				Address: "10.0.0.2",
 				User:    "root",
 				Port:    22,
-				Group:   "db",
+				//Group:   "db",
 			},
 		},
 	}
@@ -188,7 +188,7 @@ func TestInventoryResolveHost(t *testing.T) {
 			Address: "10.0.0.2",
 			User:    "root",
 			Port:    22,
-			Group:   "db",
+			//Group:   "db",
 		},
 	}
 	if !reflect.DeepEqual(hosts, want) {
@@ -225,13 +225,13 @@ func TestInventoryResolveAndDeduplicate(t *testing.T) {
 				Address: "192.2.2.1",
 				User:    "root",
 				Port:    22,
-				Group:   "web",
+				//Group:   "web",
 			},
 			{
 				Address: "192.2.2.2",
 				User:    "root",
 				Port:    22,
-				Group:   "web",
+				//Group:   "web",
 			},
 		},
 	}
@@ -261,23 +261,23 @@ func TestDeduplicateDifferentSSHUsers(t *testing.T) {
 			Port:    22,
 		},
 	}
-	
+
 	result := Deduplicate(hosts)
-	
+
 	if len(result) != 2 {
 		t.Fatalf(
 			"expected 2 hosts, got %d",
 			len(result),
 		)
 	}
-	
+
 	if result[0].User != "root" {
 		t.Errorf(
 			"result[0].User = %q",
 			result[0].User,
 		)
 	}
-	
+
 	if result[1].User != "admin" {
 		t.Errorf(
 			"result[1].User = %q",
@@ -293,11 +293,11 @@ func TestInventoryResolveUnknownTarget(t *testing.T) {
 				Address: "10.0.0.1",
 				User:    "root",
 				Port:    22,
-				Group:   "web",
+				//Group:   "web",
 			},
 		},
 	}
-	
+
 	_, err := inv.Resolve([]string{"unknown"})
 	if err == nil {
 		t.Fatal("expected error, got nil")
@@ -314,7 +314,7 @@ func TestInventoryResolveEmptyTargets(t *testing.T) {
 			},
 		},
 	}
-	
+
 	_, err := inv.Resolve(nil)
 	if err == nil {
 		t.Fatal("expected error, got nil")
@@ -331,11 +331,11 @@ func TestInventoryHostsReturnsCopy(t *testing.T) {
 			},
 		},
 	}
-	
+
 	hosts := inv.Hosts()
-	
+
 	hosts[0].Address = "changed"
-	
+
 	if inv.hosts[0].Address != "10.0.0.1" {
 		t.Fatal("Hosts() returned internal slice")
 	}

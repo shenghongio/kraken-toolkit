@@ -1,14 +1,19 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"github.com/kraken-pedestal/cmd/basic"
+	"github.com/kraken-pedestal/internal/config"
 	"github.com/kraken-pedestal/pkg/cli"
 	"github.com/kraken-pedestal/pkg/logger"
 	"github.com/kraken-pedestal/utils"
 	"github.com/spf13/cobra"
 	"log/slog"
 )
+
+var appConfig *config.Config
+var globalFlags config.GlobalFlags
 
 // NewRootCmd create the root command
 func NewRootCmd() *cobra.Command {
@@ -25,15 +30,16 @@ func NewRootCmd() *cobra.Command {
 
 		// Global logger initialization
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			// 1.初始化日志
+
+			//2. 加载全局配置
+			if err := loadConfig(cmd); err != nil {
+				return err
+			}
+			// 2.初始化日志
 			if err := initLogger(cmd); err != nil {
 				return err
 			}
 
-			//2. 加载全局配置
-			//if err := loadConfig(); err != nil {
-			//	return err
-			//}
 			return nil
 		},
 
@@ -46,12 +52,12 @@ func NewRootCmd() *cobra.Command {
 
 	// Global Flags
 
-	//cmd.PersistentFlags().StringVar(
-	//	&globalFlags.Config,
-	//	"config",
-	//	"",
-	//	"config file path",
-	//)
+	cmd.PersistentFlags().StringVar(
+		&globalFlags.Config,
+		"config",
+		"",
+		"config file path",
+	)
 	cmd.PersistentFlags().String(
 		"log-level",
 		"info",
@@ -128,5 +134,30 @@ func initLogger(cmd *cobra.Command) error {
 		TimeFormat: "[ 06-01-02/15:04:05 ]",
 	})
 	slog.Debug("logger initialization completed", "level", level.String(), "source", addSource)
+	return nil
+}
+
+// 接收 cmd 参数，并设置context
+func loadConfig(cmd *cobra.Command) error {
+	slog.Debug("loading config", "path", globalFlags.Config)
+	if globalFlags.Config == "" {
+		slog.Debug("config file is empty")
+		return nil
+
+	}
+	cfg, err := config.Load(globalFlags.Config)
+	if err != nil {
+		return err
+	}
+	appConfig = cfg
+
+	// 把 config 注入 context 供子命令读取
+	ctx := context.WithValue(cmd.Context(), config.ContextKeyConfig, cfg)
+	cmd.SetContext(ctx)
+	slog.Debug("loaded config",
+		"ssh_user", cfg.Basic.SSH.SSHUser,
+		"ssh_port", cfg.Basic.SSH.SSHPort,
+		"ssh_timeout", cfg.Basic.SSH.SSHTimeout,
+	)
 	return nil
 }

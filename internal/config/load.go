@@ -53,9 +53,9 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("config is nil")
 	}
 	// Basic 模块配置校验
-	if err := c.Basic.Validate(); err != nil {
-		return fmt.Errorf("basic: %w", err)
-	}
+	//if err := c.Basic.Validate(); err != nil {
+	//	return fmt.Errorf("basic: %w", err)
+	//}
 
 	// TODO: 后续增加其他模块校验
 

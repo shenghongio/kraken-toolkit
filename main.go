@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"github.com/kraken-pedestal/cmd"
 	"github.com/kraken-pedestal/pkg/logger"
 	"log/slog"
@@ -52,6 +53,8 @@ func handleError(err error) {
 		slog.Error(appErr.Message, "error", appErr.Err, "code", appErr.Code.String())
 		os.Exit(exitCode(appErr.Code))
 	}
+	fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+	os.Exit(1)
 }
 
 // exitCode converts application error codes to process exit codes,
