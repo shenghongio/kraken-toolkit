@@ -15,7 +15,7 @@ import (
 //	kraken basic shell
 //	kraken basic copy
 //	kraken basic fetch
-//	kraken basic script
+//	kraken basic scripts
 //	kraken basic ping
 //	kraken basic check
 
@@ -37,6 +37,8 @@ func NewBasicCmd() *cobra.Command {
 
 	addUserCmd := NewAddUserCmd()
 	if addUserCmd == nil {
+		slog.Error("addUserCmd is nil")
+	} else {
 		slog.Debug("adduser command", "use", addUserCmd.Use)
 	}
 

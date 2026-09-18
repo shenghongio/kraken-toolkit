@@ -10,7 +10,7 @@ import (
 func NewCompletionCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "completion [bash|zsh]",
-		Short: "Generate the autocompletion script for the specified shell",
+		Short: "Generate the autocompletion scripts for the specified shell",
 		Long: `Generate shell autocompletion scripts for kraken.
 
 Supported shells:

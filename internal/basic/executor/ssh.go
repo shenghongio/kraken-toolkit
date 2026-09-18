@@ -2,7 +2,6 @@ package executor
 
 import (
 	"fmt"
-	"github.com/kraken-pedestal/internal/basic/inventory"
 	"golang.org/x/crypto/ssh"
 	"os"
 	"time"
@@ -11,21 +10,18 @@ import (
 type SSHOptions struct {
 	User       string
 	Port       int
-	Host       string
 	Timeout    time.Duration
 	PrivateKey string
 	// 是否校验目标机器指纹
 	StrictHostKey bool
 	Password      string
-	// known_hosts 文件
-	KnownHostsFile string
 }
 
 // SSHConnection 表示 SSH 连接接口。
 // Executor 依赖接口而不是具体 SSHClient。
 // 方便单元测试注入 mock 实现。
 type SSHConnection interface {
-	Connect(host inventory.Host) (*ssh.Client, error)
+	Connect(host Host) (*ssh.Client, error)
 }
 
 // SSHClient 表示 SSH 客户端接口。
@@ -63,7 +59,7 @@ func NewSSHClient(options SSHOptions) *SSHClient {
 //   - HostKeyCallback 根据 c.options.StrictHostKey 决定是否校验主机密钥。
 //   - 连接超时由 c.options.Timeout 控制。
 
-func (c *SSHClient) Connect(host inventory.Host) (*ssh.Client, error) {
+func (c *SSHClient) Connect(host Host) (*ssh.Client, error) {
 
 	// 防止在 nil 指针上调用方法导致 panic，是接收者方法的标准防御性编程。
 	if c == nil {
@@ -75,15 +71,18 @@ func (c *SSHClient) Connect(host inventory.Host) (*ssh.Client, error) {
 	//if user == "" {
 	//	user = c.options.User
 	//}
-	user := c.options.User
+	user := host.User
+	if user == "" {
+		user = c.options.User
+	}
 	if user == "" {
 		return nil, fmt.Errorf("ssh user is empty")
 	}
 
 	// 解析端口：优先使用主机级配置 host.Port，无效值（<=0）时回退到 SSH 默认端口 22。
-	port := c.options.Port
-	if port > 0 {
-		port = host.Port
+	port := host.Port
+	if port <= 0 {
+		port = c.options.Port
 	}
 	if port <= 0 {
 		port = 22
@@ -102,14 +101,6 @@ func (c *SSHClient) Connect(host inventory.Host) (*ssh.Client, error) {
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),   // 主机密钥校验回调，稍后单独设置
 		Timeout:         c.options.Timeout,             // 连接超时时间
 	}
-
-	// 根据 StrictHostKey 选项决定主机密钥校验策略并赋值给 config。
-	// StrictHostKey=false 时跳过校验（InsecureIgnoreHostKey），true 时暂未实现。
-	//hostKeyCallback, err := c.hostKeyCallback()
-	//if err != nil {
-	//	return nil, err
-	//}
-	//config.HostKeyCallback = hostKeyCallback
 
 	// 拼接目标地址为 host:port 格式，并发起 TCP+SSH 拨号建立连接。
 	address := fmt.Sprintf("%s:%d", host.Address, port)
@@ -140,14 +131,16 @@ func (c *SSHClient) authMethods() (ssh.AuthMethod, error) {
 	if c.options.Password != "" {
 		return ssh.Password(c.options.Password), nil
 	}
-	signer, err := c.loadPrivateKey()
-	if err != nil {
-		// 私钥加载失败（路径不存在、解析错误等），将错误原样上抛。
-		return nil, err
+	if c.options.PrivateKey != "" {
+		signer, err := c.loadPrivateKey()
+		if err != nil {
+			return nil, err
+		}
+		return ssh.PublicKeys(signer), nil
 	}
 
 	// 用签名器构造公钥认证方式，由 SSH 握手时自动用私钥签名挑战。
-	return ssh.PublicKeys(signer), nil
+	return nil, fmt.Errorf("ssh auth methods is empty")
 }
 
 // loadPrivateKey 加载 ssh 私钥
@@ -157,43 +150,15 @@ func (c *SSHClient) loadPrivateKey() (ssh.Signer, error) {
 		return nil, fmt.Errorf("kraken ssh private key not configured")
 	}
 
-	//signer, err := loadPrivateKeyFile(c.options.PrivateKey)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//slog.Debug("loaded private key", slog.String("path", c.options.PrivateKey))
-	return loadPrivateKeyFile(c.options.PrivateKey)
-}
-
-// loadPrivateKeyFile 从文件读取 ssh 密钥
-func loadPrivateKeyFile(path string) (ssh.Signer, error) {
-	file, err := os.ReadFile(path)
+	file, err := os.ReadFile(c.options.PrivateKey)
 	if err != nil {
-		return nil, fmt.Errorf("read ssh private key %q failed: %w", path, err)
+		return nil, fmt.Errorf("kraken ssh private key %q failed: %w", c.options.PrivateKey, err)
 	}
-
 	signer, err := ssh.ParsePrivateKey(file)
 	if err != nil {
-		return nil, fmt.Errorf("parse ssh private key %q failed: %w", path, err)
+		return nil, fmt.Errorf("kraken ssh private key %q failed: %w", c.options.PrivateKey, err)
 	}
 	return signer, nil
-}
-
-// hostKeyCallback 创建 HostKey
-func (c *SSHClient) hostKeyCallback() (ssh.HostKeyCallback, error) {
-	if !c.options.StrictHostKey {
-		// 当前先保持fastdp行为兼容
-		return ssh.InsecureIgnoreHostKey(), nil
-	}
-	if c.options.KnownHostsFile == "" {
-		return nil, fmt.Errorf("strict host key verification requires known_hosts file")
-	}
-
-	// knownhosts 校验后续单独实现
-	// 目前不让ssh核心层提前绑定安全策略实现
-
-	// TODO: 实现 knownhosts 校验逻辑
-	return nil, fmt.Errorf("strict host key verification is not implemented yet")
 }
 
 func normalizeSSHOptions(options SSHOptions) SSHOptions {

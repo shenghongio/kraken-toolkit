@@ -1,13 +1,14 @@
 package basic
 
 import (
+	"context"
 	"fmt"
 	"github.com/kraken-pedestal/internal/basic/executor"
-	"github.com/kraken-pedestal/internal/basic/inventory"
-	execRuntime "github.com/kraken-pedestal/internal/basic/runtime"
+	"github.com/kraken-pedestal/internal/basic/runner"
 	"github.com/kraken-pedestal/internal/config"
 	"github.com/kraken-pedestal/utils"
 	"github.com/spf13/cobra"
+	"golang.org/x/crypto/ssh"
 	"log/slog"
 )
 
@@ -32,9 +33,8 @@ func NewShellCmd() *cobra.Command {
 			//  无 --ssh-host，无 config 或 host_inventory: false	打印提示，告诉用户怎么用
 			if !cmd.Flags().Changed("ssh-host") {
 				// 检查 config 配置文件是否启用 批量模式开关host_inventory=true
-				v := cmd.Context().Value(config.ContextKeyConfig)
-				cfg, ok := v.(*config.Config)
-				if ok && cfg != nil && cfg.Basic.HostInventory {
+				cfg, ok := config.FromContext(cmd.Context())
+				if ok && cfg.Basic.HostInventory {
 					return runBatchMode(cmd, command)
 				}
 				// 没有 config 或 host_inventory != true
@@ -58,79 +58,40 @@ func runSingleMode(cmd *cobra.Command, command string) error {
 	sshOpt := executor.SSHOptions{
 		User:     BasicFlags.SSHUser,
 		Port:     BasicFlags.SSHPort,
-		Host:     BasicFlags.SSHHost,
 		Password: BasicFlags.SSHPassword,
 	}
-	hosts := inventory.Host{
-		Address: sshOpt.Host,
-		User:    sshOpt.User,
-		Port:    sshOpt.Port,
-		Passwd:  sshOpt.Password,
+	hosts := executor.Host{
+		Address: BasicFlags.SSHHost,
+		User:    BasicFlags.SSHUser,
+		Port:    BasicFlags.SSHPort,
+		Passwd:  BasicFlags.SSHPassword,
 	}
-	inv := inventory.NewFromHosts([]inventory.Host{hosts})
 	exec := executor.NewExecutor(executor.Options{
 		Concurrency: 1,
 		SSH:         sshOpt,
 	})
 
-	rt := execRuntime.New(inv, exec)
-	results := rt.Shell(cmd.Context(), command)
-	printResults(results)
-	return nil
+	results := exec.Run(cmd.Context(), []executor.Host{hosts}, func(ctx context.Context, host executor.Host, client *ssh.Client) executor.Result {
+		return executor.RunShell(ctx, host, client, command)
+	})
+
+	return utils.PrintResultAndCheck(results)
 }
 
 // 批量处理
 func runBatchMode(cmd *cobra.Command, command string) error {
-	v := cmd.Context().Value(config.ContextKeyConfig)
-	cfg, ok := v.(*config.Config)
-	if !ok || cfg == nil {
+	cfg, ok := config.FromContext(cmd.Context())
+	if !ok {
 		return fmt.Errorf("batch mode requires config file (--config)")
 	}
-	if !cfg.Basic.HostInventory {
-		return fmt.Errorf("batch mode requires host_inventory: true in config")
-	}
-	if len(cfg.Basic.IPList) == 0 {
-		return fmt.Errorf("batch mode requires iplist in config")
-	}
 
-	sshOpt := executor.SSHOptions{
-		User:       cfg.Basic.User,
-		Port:       22,
-		PrivateKey: cfg.Basic.PrivateKeyPath,
+	runnerCfg, err := runner.BuildFromConfig(cfg)
+	if err != nil {
+		return err
 	}
-	slog.Debug("batch sshOpt", "private_key", sshOpt.PrivateKey)
-	hosts := make([]inventory.Host, len(cfg.Basic.IPList))
-	for i, ip := range cfg.Basic.IPList {
-		hosts[i] = inventory.Host{
-			Address: ip,
-			User:    cfg.Basic.User,
-			Port:    22,
-		}
-	}
-	inv := inventory.NewFromHosts(hosts)
-
-	concurrency := cfg.Basic.Concurrency
-	if concurrency <= 0 {
-		concurrency = 5
-	}
-	exec := executor.NewExecutor(executor.Options{
-		Concurrency: concurrency,
-		SSH:         sshOpt,
+	slog.Debug("batch mode", "hosts", len(runnerCfg.Hosts), "concurrency", runnerCfg.Concurrency)
+	results := runner.Run(cmd.Context(), runnerCfg, func(ctx context.Context, host executor.Host, client *ssh.Client) executor.Result {
+		return executor.RunShell(ctx, host, client, command)
 	})
-	slog.Debug("batch mode", "hosts", len(hosts), "concurrency", concurrency)
-	rt := execRuntime.New(inv, exec)
-	results := rt.Shell(cmd.Context(), command)
-	printResults(results)
-	return nil
-}
-
-// 打印结果
-func printResults(results []executor.Result) {
-	for _, result := range results {
-		if result.Error != nil {
-			fmt.Printf("[FAIL] %s: %v\n", result.Host.Address, result.Error)
-			continue
-		}
-		fmt.Printf("[OK] %s\n%s\n", result.Host.Address, result.Stdout)
-	}
+	return utils.PrintResultAndCheck(results)
 }

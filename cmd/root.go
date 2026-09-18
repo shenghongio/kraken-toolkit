@@ -12,7 +12,6 @@ import (
 	"log/slog"
 )
 
-var appConfig *config.Config
 var globalFlags config.GlobalFlags
 
 // NewRootCmd create the root command
@@ -27,10 +26,8 @@ func NewRootCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
-
 		// Global logger initialization
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-
 			// 1.初始化日志
 			if err := initLogger(cmd); err != nil {
 				return err
@@ -42,12 +39,10 @@ func NewRootCmd() *cobra.Command {
 			return nil
 		},
 	}
-
 	// Disable Cobra's auto-generated completion
 	cmd.CompletionOptions.DisableDefaultCmd = true
 
 	// Global Flags
-
 	cmd.PersistentFlags().StringVar(
 		&globalFlags.Config,
 		"config",
@@ -145,7 +140,6 @@ func loadConfig(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	appConfig = cfg
 
 	// 把 config 注入 context 供子命令读取
 	ctx := context.WithValue(cmd.Context(), config.ContextKeyConfig, cfg)
