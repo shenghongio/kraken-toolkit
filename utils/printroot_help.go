@@ -48,6 +48,40 @@ func PrintRootHelp(out io.Writer, command *cobra.Command) {
 }
 
 func PrintCommandHelp(out io.Writer, command *cobra.Command) {
+
+	if command.Example != "" || command.Long != "" {
+		// 父命令用 Short + Usage 格式
+		if command.Long != "" && !command.Runnable() {
+
+			fmt.Fprintf(out, "%s Usage:\n  %s\n", command.Short, command.UseLine())
+			fmt.Fprintf(out, "\n%s\n", command.Long)
+			if command.Example != "" {
+				fmt.Fprintf(out, "\nExamples:\n  %s\n", command.Example)
+			}
+			fmt.Fprintln(out, "\nGlobal flags: Use 'kraken --help' for global options.")
+			return
+		}
+		//fmt.Fprintln(out, "Usage:")
+		//fmt.Fprintf(out, "  %s\n", command.UseLine())
+		//if command.Short != "" {
+		//	fmt.Fprintf(out, "\n  %s\n", command.Short)
+		//}
+		fmt.Fprintf(out, "%s Usage:\n  %s\n", command.Short, command.UseLine())
+		if command.Long != "" {
+			fmt.Fprintf(out, "\n%s\n", command.Long)
+		}
+		if command.Example != "" {
+			fmt.Fprintf(out, "\nExamples:\n  %s\n", command.Example)
+		}
+		if command.HasAvailableLocalFlags() {
+			fmt.Fprintln(out)
+			fmt.Fprintln(out, "Flags:")
+			fmt.Fprint(out, command.LocalNonPersistentFlags().FlagUsages())
+		}
+		fmt.Fprintln(out, "\nGlobal flags: Use 'kraken --help' for global options.")
+		return
+	}
+
 	// Usage
 	fmt.Fprintln(out, "Usage:")
 	fmt.Fprintf(out, "  %s\n", command.UseLine())

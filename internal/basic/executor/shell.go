@@ -54,6 +54,8 @@ func RunShell(ctx context.Context, host Host, client *ssh.Client, cmd string) Re
 		if exitErr, ok := err.(*ssh.ExitError); ok {
 			result.ExitCode = exitErr.ExitStatus()
 		}
+		result.Stdout = stdout.String()
+		result.Stderr = stderr.String()
 		return result
 	}
 

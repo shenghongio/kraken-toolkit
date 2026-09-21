@@ -4,27 +4,29 @@ import (
 	"context"
 	"fmt"
 	"github.com/kraken-pedestal/internal/basic/executor"
-	"github.com/kraken-pedestal/internal/basic/runner"
 	"github.com/kraken-pedestal/internal/config"
+	"github.com/kraken-pedestal/pkg/cli"
 	"github.com/kraken-pedestal/utils"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh"
-	"log/slog"
 )
 
-func NewShellCmd() *cobra.Command {
+func NewCmd() *cobra.Command {
 	var (
 		command string
 	)
 
 	cmd := &cobra.Command{
-		Use:   "shell",
-		Short: "Execute shell commands on hosts",
-
+		Use:   "cmd",
+		Short: "Execute commands on hosts",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 {
+				cli.PrintSubCmdHelp(cmd)
+				return nil
+			}
 			if command == "" {
-				//cmd.Help()
-				utils.PrintUsage(cmd, "Example: kraken basic shell -c \"uptime\" --ssh-host=10.32.9.138")
+				cli.PrintSubCmdHelp(cmd)
+
 				return nil
 			}
 			// --ssh-user, 有值，走单机模式，负责批量处理模式
@@ -37,11 +39,17 @@ func NewShellCmd() *cobra.Command {
 				if ok && cfg.Basic.HostInventory {
 					return runBatchMode(cmd, command)
 				}
+				// 用户提供了 SSH 凭据但漏了 --ssh-host，给出针对性提示
+				if cmd.Flags().Changed("ssh-user") || cmd.Flags().Changed("ssh-password") {
+					fmt.Println("缺少 --ssh-host 参数")
+					fmt.Println("  单机模式需要指定目标主机: --ssh-host=<IP>")
+					return nil
+				}
 				// 没有 config 或 host_inventory != true
 				fmt.Println("未检测到批量配置（host_inventory: true）")
 				fmt.Println("请选择执行模式:")
-				fmt.Println("  单机: kraken basic shell -c <cmd> --ssh-host=<IP>")
-				fmt.Println("  批量: kraken basic shell -c <cmd> --config <file> (配置中设置 host_inventory: true)")
+				fmt.Println("  单机: kraken bc cmd -c <cmd> --ssh-host=<IP>")
+				fmt.Println("  批量: kraken bc cmd -c <cmd> --config <file> (配置中设置 host_inventory: true)")
 				return nil
 			}
 			return runSingleMode(cmd, command)
@@ -49,49 +57,26 @@ func NewShellCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&command, "command", "c", "", "shell command")
+	cmd.Long = "Only supports shell command mode, not script files.\n" +
+		"    * For scripts, use: kraken bc script <file>"
+	cmd.Example = "kraken bc cmd -c \"uptime\" --ssh-host=10.32.9.138"
+	cmd.SetHelpTemplate(cli.SubCmdHelpTemplate)
 	return cmd
 
 }
 
 // 单机模式
 func runSingleMode(cmd *cobra.Command, command string) error {
-	sshOpt := executor.SSHOptions{
-		User:     BasicFlags.SSHUser,
-		Port:     BasicFlags.SSHPort,
-		Password: BasicFlags.SSHPassword,
-	}
-	hosts := executor.Host{
-		Address: BasicFlags.SSHHost,
-		User:    BasicFlags.SSHUser,
-		Port:    BasicFlags.SSHPort,
-		Passwd:  BasicFlags.SSHPassword,
-	}
-	exec := executor.NewExecutor(executor.Options{
-		Concurrency: 1,
-		SSH:         sshOpt,
-	})
-
-	results := exec.Run(cmd.Context(), []executor.Host{hosts}, func(ctx context.Context, host executor.Host, client *ssh.Client) executor.Result {
+	exec, host := NewSingleExecutor()
+	results := exec.Run(cmd.Context(), []executor.Host{host}, func(ctx context.Context, host executor.Host, client *ssh.Client) executor.Result {
 		return executor.RunShell(ctx, host, client, command)
 	})
-
 	return utils.PrintResultAndCheck(results)
 }
 
 // 批量处理
 func runBatchMode(cmd *cobra.Command, command string) error {
-	cfg, ok := config.FromContext(cmd.Context())
-	if !ok {
-		return fmt.Errorf("batch mode requires config file (--config)")
-	}
-
-	runnerCfg, err := runner.BuildFromConfig(cfg)
-	if err != nil {
-		return err
-	}
-	slog.Debug("batch mode", "hosts", len(runnerCfg.Hosts), "concurrency", runnerCfg.Concurrency)
-	results := runner.Run(cmd.Context(), runnerCfg, func(ctx context.Context, host executor.Host, client *ssh.Client) executor.Result {
+	return NewBatchExecutor(cmd, func(ctx context.Context, host executor.Host, client *ssh.Client) executor.Result {
 		return executor.RunShell(ctx, host, client, command)
 	})
-	return utils.PrintResultAndCheck(results)
 }

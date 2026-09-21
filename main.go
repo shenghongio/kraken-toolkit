@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/kraken-pedestal/cmd"
 	"github.com/kraken-pedestal/pkg/logger"
 	"os"
@@ -17,6 +18,7 @@ func main() {
 	}()
 	rootCmd := cmd.NewRootCmd()
 	if err := rootCmd.Execute(); err != nil {
+		fmt.Fprintln(os.Stderr, "Error:", err)
 		os.Exit(1)
 	}
 }

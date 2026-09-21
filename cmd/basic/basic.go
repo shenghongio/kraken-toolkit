@@ -21,35 +21,25 @@ import (
 
 func NewBasicCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:          "basic",
-		Short:        "Basic Commands",
+		Use:   "bc",
+		Short: "Basic Commands",
+		Long: "Host-level batch operations:\n" +
+			"    * cmd      - Execute shell commands on remote hosts\n" +
+			"    * script   - Execute local script files on remote hosts\n" +
+			"    * adduser  - Create management user and deploy SSH key",
+		Example: "kraken bc cmd -c \"uptime\" --ssh-host=10.32.9.138\n" +
+			"  kraken bc script deploy.sh --config kraken.yaml",
 		GroupID:      cli.GroupBasic,
 		SilenceUsage: true,
 	}
 	slog.Debug("register basic subcommands")
-
-	shellCmd := NewShellCmd()
-	if shellCmd == nil {
-		slog.Error("shellCmd is nil")
-	} else {
-		slog.Debug("shell command", "use", shellCmd.Use)
-	}
-
-	addUserCmd := NewAddUserCmd()
-	if addUserCmd == nil {
-		slog.Error("addUserCmd is nil")
-	} else {
-		slog.Debug("adduser command", "use", addUserCmd.Use)
-	}
-
-	// Register the shared parameters for all subcommands of the Basic module
 	registerBasicFlags(cmd)
 
 	// Register Basic sub command
 	cmd.AddCommand(
-		NewShellCmd(),
+		NewCmd(),
 		NewAddUserCmd(),
-		//NewCopyCmd(),
+		NewScriptCmd(),
 		//NewFetchCmd(),
 		//NewScriptCmd(),
 		//NewPingCmd(),

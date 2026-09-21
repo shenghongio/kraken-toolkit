@@ -8,6 +8,7 @@ import (
 	"github.com/kraken-pedestal/internal/basic/executor"
 	"github.com/kraken-pedestal/internal/basic/runner"
 	"github.com/kraken-pedestal/internal/config"
+	"github.com/kraken-pedestal/pkg/cli"
 	"github.com/kraken-pedestal/utils"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh"
@@ -25,11 +26,18 @@ func NewAddUserCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "adduser",
 		Short: "Create management user and deploy SSH key on target hosts",
+		Long: "Uses bootstrap credentials to create the management user on all targets.\n" +
+			"    * Requires bootstrap.user, private_key_path, public_key_path in config.\n" +
+			"    * Use --confirm to proceed after reviewing the preview.",
 
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 {
+				cli.PrintSubCmdHelp(cmd)
+				return nil
+			}
 			cfg, ok := config.FromContext(cmd.Context())
 			if !ok {
-				utils.PrintUsage(cmd, "Example: kraken basic adduser --config kraken.yaml --confirm")
+				cli.PrintSubCmdHelp(cmd)
 				return nil
 			}
 			if len(cfg.Basic.IPList) == 0 {
@@ -55,10 +63,10 @@ func NewAddUserCmd() *cobra.Command {
 
 			// 确认
 			if !confirm {
-				fmt.Printf("WARNING: 将在 %d 台主机上创建用户 '%s' 并部署公钥\n", len(cfg.Basic.IPList), newUser)
-				fmt.Printf("  登录用户: %s\n", cfg.Basic.Bootstrap.User)
-				fmt.Printf("  公钥文件: %s\n", cfg.Basic.PublicKeyPath)
-				fmt.Println("\n使用 --confirm 确认执行")
+				fmt.Printf("Warning: User '%s' will be created and public key deployed on%d hosts\n", len(cfg.Basic.IPList), newUser)
+				fmt.Printf("  Logged-in user: %s\n", cfg.Basic.Bootstrap.User)
+				fmt.Printf("  Public key file: %s\n", cfg.Basic.PublicKeyPath)
+				fmt.Println("\nUse -- confirm to confirm execution")
 				return nil
 			}
 
@@ -81,6 +89,8 @@ func NewAddUserCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().BoolVar(&confirm, "confirm", false, "Confirm adduser")
+	cmd.Example = "kraken bc adduser --config kraken.yaml --confirm"
+	cmd.SetHelpTemplate(cli.SubCmdHelpTemplate)
 	return cmd
 }
 
