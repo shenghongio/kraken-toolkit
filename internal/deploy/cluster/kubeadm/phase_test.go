@@ -156,7 +156,7 @@ func TestRunAll(t *testing.T) {
 	registry := NewPhaseRegistry()
 	registry.Register(newMockPhase("a"))
 	registry.Register(newMockPhase("b", "a"))
-	registry.Register(newMockPhase("c", "a"))
+	registry.Register(newMockPhase("c", "b"))
 	
 	var executed []string
 	exec := func(ctx context.Context, phase Phase, cfg PhaseConfig) error {

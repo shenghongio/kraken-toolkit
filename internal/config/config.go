@@ -46,22 +46,18 @@ func Load(path string) (*Config, error) {
 	if path == "" {
 		return nil, ErrorConfigEmpty
 	}
-
+	
 	// 2.读取配置文件
 	readFile, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf(`read config file "%q" error: %w`, path, err)
 	}
-
+	
 	//3，yaml解析
 	var cfg Config
 	if err := yaml.Unmarshal(readFile, &cfg); err != nil {
 		return nil, fmt.Errorf(`unmarshal file "%s" error: %w`, path, err)
 	}
-	//4. 配置校验
-	//if err := cfg.Validate(); err != nil {
-	//	return nil, fmt.Errorf(`validate file "%s" error: %w`, path, err)
-	//}
 	return &cfg, nil
 }
 
@@ -71,6 +67,29 @@ type DeployConfig struct {
 
 type ClusterConfig struct {
 	//TODO: 实现具体配置
+	Name              string                  `yaml:"name"`
+	KubernetesVersion string                  `yaml:"kubernetes_version"`
+	PodCIDR           string                  `yaml:"pod_cidr"`
+	ServiceCIDR       string                  `yaml:"service_cidr"`
+	ServiceDNSDomain  string                  `yaml:"service_dns_domain"`
+	ControlPlane      ClusterControlPlane     `yaml:"control_plane"`
+	ContainerRuntime  ClusterContainerRuntime `yaml:"container_runtime"`
+	Nodes             []ClusterNode           `yaml:"nodes"`
+	ExtraKubeadm      map[string]interface{}  `yaml:"extra_kubeadm_config"`
+}
+type ClusterControlPlane struct {
+	Endpoint       string `yaml:"endpoint"`
+	CertificateKey string `yaml:"certificate_key"`
+}
+type ClusterContainerRuntime struct {
+	Tyoe   string `yaml:"tyoe"`
+	Socket string `yaml:"socket"`
+}
+type ClusterNode struct {
+	Address string `yaml:"address"`
+	Role    string `yaml:"role"`
+	User    string
+	Port    int `yaml:"port"`
 }
 
 type MiddlewareConfig struct {
@@ -87,4 +106,18 @@ func FromContext(ctx context.Context) (*Config, bool) {
 	}
 	cfg, ok := v.(*Config)
 	return cfg, ok
+}
+func (c *ClusterConfig) Default() {
+	if c.ServiceDNSDomain == "" {
+		c.ServiceDNSDomain = "cluster.local"
+	}
+	if c.PodCIDR == "" {
+		c.PodCIDR = "10.244.0.0/16"
+	}
+	if c.ServiceCIDR == "" {
+		c.ServiceCIDR = "10.96.0.0/12"
+	}
+	if c.ContainerRuntime.Socket == "" {
+		c.ContainerRuntime.Socket = "/run/containerd/containerd.sock"
+	}
 }

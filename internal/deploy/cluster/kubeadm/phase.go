@@ -154,7 +154,7 @@ func (r *PhaseRegistry) RunAll(ctx context.Context, cfg PhaseConfig, exec Execut
 	}
 	for _, phase := range sorted {
 		if cfg.DryRun {
-			fmt.Printf(" [DRT-RUN] %-20s -> %s\n", phase.Name(), phase.Dependencies())
+			fmt.Printf(" [DRT-RUN] %-20s -> %v\n", phase.Name(), phase.Dependencies())
 			continue
 		}
 		select {
@@ -163,7 +163,7 @@ func (r *PhaseRegistry) RunAll(ctx context.Context, cfg PhaseConfig, exec Execut
 		default:
 		}
 		if err := exec(ctx, phase, cfg); err != nil {
-			return fmt.Errorf("phase %q failed %w", phase.Name(), err)
+			return fmt.Errorf("phase %q failed: %w", phase.Name(), err)
 		}
 	}
 	return nil
