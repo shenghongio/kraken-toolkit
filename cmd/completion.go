@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/kraken-pedestal/pkg/cli"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -9,7 +10,7 @@ import (
 func NewCompletionCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "completion [bash|zsh]",
-		Short: "Generate the autocompletion script for the specified shell",
+		Short: "Generate the autocompletion scripts for the specified shell",
 		Long: `Generate shell autocompletion scripts for kraken.
 
 Supported shells:
@@ -20,7 +21,7 @@ Example:
   kraken completion bash > /etc/bash_completion.d/kraken
   kraken completion zsh > "${fpath[1]}/_kraken"
 `,
-		GroupID: GroupSettings,
+		GroupID: cli.GroupSettings,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
 				return fmt.Errorf("requires a shell type (bash, zsh)")

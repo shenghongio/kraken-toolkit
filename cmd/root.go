@@ -1,58 +1,18 @@
 package cmd
 
 import (
-	_ "embed"
+	"context"
 	"fmt"
+	"github.com/kraken-pedestal/cmd/basic"
+	"github.com/kraken-pedestal/internal/config"
+	"github.com/kraken-pedestal/pkg/cli"
 	"github.com/kraken-pedestal/pkg/logger"
-	"github.com/kraken-pedestal/pkg/printer"
+	"github.com/kraken-pedestal/utils"
 	"github.com/spf13/cobra"
 	"log/slog"
 )
 
-var AsciiLogo string
-
-//func NewRootCmd() *cobra.Command {
-//	cmd := &cobra.Command{
-//		Use: "kraken",
-//		Long: `Kraken is a unified CLI tool for deploying and operating Kubernetes clusters and middleware.
-//
-//  kraken dcli  - Deployment CLI (Build): Install K8s, deploy middleware
-//  kraken ocli  - Operations CLI (Fix): Diagnose network, pods, and systems
-//  kraken version  - Print kraken version information`,
-//
-//		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-//			return initLogger(cmd)
-//		},
-//		RunE: func(cmd *cobra.Command, args []string) error {
-//			if showVersion, _ := cmd.Flags().GetBool("version"); showVersion {
-//				fmt.Println(executor.PrintString())
-//				return nil
-//			}
-//			fmt.Print(AsciiLogo)
-//			return cmd.Help()
-//		},
-//	}
-//
-//	cmd.Flags().BoolP("version", "v", false, "Display detailed information of the current version")
-//	cmd.PersistentFlags().String("log-level", "info", "日志级别 (debug, info, warn, error)")
-//	cmd.PersistentFlags().Bool("log-source", false, "在日志中包含代码位置 (文件:行号)")
-//
-//	cmd.AddCommand(VersionCmd())
-//	cmd.SilenceErrors = true
-//	cmd.SilenceUsage = true
-//	return cmd
-//}
-
-// Command Group
-const (
-	GroupDeploy          = "deploy"
-	GroupCluster         = "cluster"
-	GroupTroubleshooting = "troubleshooting"
-	GroupNetwork         = "network"
-	GroupBasic           = "basic"
-	GroupSettings        = "settings"
-	GroupOther           = "other"
-)
+var globalFlags config.GlobalFlags
 
 // NewRootCmd create the root command
 func NewRootCmd() *cobra.Command {
@@ -66,17 +26,29 @@ func NewRootCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
-
 		// Global logger initialization
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			return initLogger(cmd)
+			// 1.初始化日志
+			if err := initLogger(cmd); err != nil {
+				return err
+			}
+			//2. 加载全局配置
+			if err := loadConfig(cmd); err != nil {
+				return err
+			}
+			return nil
 		},
 	}
-
 	// Disable Cobra's auto-generated completion
 	cmd.CompletionOptions.DisableDefaultCmd = true
 
 	// Global Flags
+	cmd.PersistentFlags().StringVar(
+		&globalFlags.Config,
+		"config",
+		"",
+		"config file path",
+	)
 	cmd.PersistentFlags().String(
 		"log-level",
 		"info",
@@ -92,22 +64,22 @@ func NewRootCmd() *cobra.Command {
 	cmd.AddGroup(
 		//&cobra.Group{ID: GroupDeploy, Title: "Deploy Commands:"},
 		&cobra.Group{
-			ID:    GroupBasic,
+			ID:    cli.GroupBasic,
 			Title: "Basic Commands",
 		},
 		&cobra.Group{
-			ID:    GroupSettings,
+			ID:    cli.GroupSettings,
 			Title: "Settings Commands",
 		},
 		&cobra.Group{
-			ID:    GroupOther,
+			ID:    cli.GroupOther,
 			Title: "Other Commands",
 		},
 	)
 
 	// Commands
 	cmd.AddCommand(
-		NewBasicCmd(),
+		basic.NewBasicCmd(),
 		VersionCmd(),
 		NewCompletionCmd(),
 	)
@@ -116,18 +88,17 @@ func NewRootCmd() *cobra.Command {
 	cmd.SetHelpFunc(func(command *cobra.Command, args []string) {
 		out := cmd.OutOrStdout()
 
-		// Description
-		fmt.Fprintln(out, cmd.Short)
-		fmt.Fprintln(out)
-
 		// root command
 		if command == command.Root() {
-			printer.PrintRootHelp(out, command)
+			// Description
+			fmt.Fprintln(out, cmd.Short)
+			fmt.Fprintln(out)
+			utils.PrintRootHelp(out, command)
 			return
 		}
 
 		// Subcommand
-		printer.PrintCommandHelp(out, command)
+		utils.PrintCommandHelp(out, command)
 	})
 	return cmd
 }
@@ -154,5 +125,25 @@ func initLogger(cmd *cobra.Command) error {
 		TimeFormat: "[ 06-01-02/15:04:05 ]",
 	})
 	slog.Debug("logger initialization completed", "level", level.String(), "source", addSource)
+	return nil
+}
+
+// 接收 cmd 参数，并设置context
+func loadConfig(cmd *cobra.Command) error {
+	slog.Debug("loading config", "path", globalFlags.Config)
+	if globalFlags.Config == "" {
+		slog.Debug("config file is empty")
+		return nil
+
+	}
+	cfg, err := config.Load(globalFlags.Config)
+	if err != nil {
+		return err
+	}
+
+	// 把 config 注入 context 供子命令读取
+	ctx := context.WithValue(cmd.Context(), config.ContextKeyConfig, cfg)
+	cmd.SetContext(ctx)
+	slog.Debug("loaded config", "user", cfg.Basic.User, "private_key_path", cfg.Basic.PrivateKeyPath, "concurrency", cfg.Basic.Concurrency, "iplist", cfg.Basic.IPList)
 	return nil
 }

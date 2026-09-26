@@ -3,21 +3,21 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/kraken-pedestal/internal/deploy/executor"
+	"github.com/kraken-pedestal/pkg/cli"
 	"github.com/spf13/cobra"
 )
 
 // VersionCmd  版本命令
 func VersionCmd() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:     "version",
 		Short:   "Print kraken version information",
-		GroupID: GroupOther,
+		GroupID: cli.GroupOther,
 		RunE:    runVersion,
 	}
 	// 添加命令行标志
-	//cmd.Flags().Bool("json", false, "Output version information in JSON format")
-	//return nil
+	cmd.Flags().Bool("json", false, "Output version information in JSON format")
+	return cmd
 }
 
 // runVersion 执行版本命令
@@ -28,7 +28,7 @@ func runVersion(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to retrieve JSON flag: %w", err)
 	}
 
-	info := executor.Get()
+	info := cli.Get()
 
 	if jsonoutput {
 		jsonData, err := json.MarshalIndent(info, "", "  ")
@@ -45,7 +45,7 @@ func runVersion(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func printVersionInfo(info executor.VersionInfo) {
+func printVersionInfo(info cli.VersionInfo) {
 	buildTimeDisplay := info.BuildTime
 	if t, err := info.GetBuildTime(); err == nil {
 		buildTimeDisplay = t.Local().Format("2006-01-02 15:04:05")
@@ -58,7 +58,7 @@ func printVersionInfo(info executor.VersionInfo) {
 	fmt.Printf("OS/Arch:    %s/%s\n", info.OS, info.Arch)
 
 	// 开发版本警告精简为一行（可选）
-	if executor.IsDev() {
+	if cli.IsDev() {
 		fmt.Printf("(Development build)\n")
 	}
 }

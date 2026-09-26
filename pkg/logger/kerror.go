@@ -35,11 +35,11 @@ func (c Code) String() string {
 	case CodePermission:
 		return "permission denied"
 	case CodeNetwork:
-		return "nerwork error"
+		return "network error"
 	case CodeKubernetes:
 		return "kubernetes error"
 	case CodeContainer:
-		return "contaoner error"
+		return "container error"
 	case CodeSSH:
 		return "ssh error"
 	default:

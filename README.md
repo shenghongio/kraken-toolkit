@@ -1,232 +1,1265 @@
+# Kraken Pedestal
 
-## 逻辑架构
+<p align="center">
+  <strong>Kraken Pedestal</strong>
+</p>
 
-```mermaid
-graph TD
-%% ========== 顶层命令 ==========
-    KRAKEN["kraken (root)"] --> DCLI["dcli (Deployment CLI)"]
-    KRAKEN --> OCLI["ocli (Operations CLI)"]
+<p align="center">
+  Kubernetes & AI Infrastructure Operations Toolkit
+</p>
 
-%% ========== dcli 子命令树 ==========
-    DCLI --> DCLI_K8S["k8s"]
-    DCLI --> DCLI_MW["middleware"]
+<p align="center">
+  A Go-based toolkit for system operations, Kubernetes cluster management,
+  Helm deployment, and GPU resource scheduling.
+</p>
 
-    DCLI_K8S --> K8S_INSTALL["install"]
-    DCLI_K8S --> K8S_INIT["init"]
-    DCLI_K8S --> K8S_JOIN["join"]
-    DCLI_K8S --> K8S_UPGRADE["upgrade"]
-    DCLI_K8S --> K8S_RESET["reset"]
-    DCLI_K8S --> K8S_CERT["cert"]
+<p align="center">
+  <a href="https://github.com/KrakenStack/kraken-pedestal">GitHub</a>
+  · 
+  <a href="https://github.com/KrakenStack/kraken-pedestal/issues">Issues</a>
+</p>
 
-    DCLI_MW --> MW_MYSQL["mysql"]
-    DCLI_MW --> MW_REDIS["redis"]
-    DCLI_MW --> MW_KAFKA["kafka"]
 
-%% ========== ocli 子命令树 ==========
-    OCLI --> OCLI_NET["net"]
-    OCLI --> OCLI_K8S_DIAG["k8s (diagnose)"]
-    OCLI --> OCLI_SYS["sys"]
-    OCLI --> OCLI_UTIL["util"]
+<p align="center">
+  <img src="https://cdn.simpleicons.org/kubernetes" width="36" alt="Kubernetes">
+  <img src="https://cdn.simpleicons.org/go" width="36" alt="Go">
+  <img src="https://cdn.simpleicons.org/helm" width="36" alt="Helm">
+  <img src="https://cdn.simpleicons.org/linux" width="36" alt="Linux">
+  <img src="https://cdn.simpleicons.org/nvidia" width="36" alt="NVIDIA">
+</p>
 
-    OCLI_NET --> NET_DIAG["diagnose"]
-    OCLI_NET --> NET_TRACE["trace"]
+<h1 align="center">Kraken Pedestal</h1>
 
-    NET_DIAG --> DIAG_SVC["service"]
-    NET_DIAG --> DIAG_POD["pod-to-pod"]
-    NET_DIAG --> DIAG_NODE["node-reach"]
+<p align="center">
+  <strong>Kubernetes & AI Infrastructure Operations Toolkit</strong>
+</p>
 
-    OCLI_K8S_DIAG --> K8S_POD["pod fault"]
-    OCLI_K8S_DIAG --> K8S_NODE["node health"]
+<p align="center">
+  System Operations · Kubernetes · Helm · GPU · HAMi · DRA
+</p>
 
-    OCLI_SYS --> SYS_TOP["top"]
-    OCLI_SYS --> SYS_FD["fd"]
-    OCLI_SYS --> SYS_DISK["disk"]
+<p align="center">
+  <a href="https://github.com/KrakenStack/kraken-pedestal">
+    <img src="https://img.shields.io/github/stars/KrakenStack/kraken-pedestal?style=flat-square&logo=github">
+  </a>
+  <a href="https://github.com/KrakenStack/kraken-pedestal">
+    <img src="https://img.shields.io/github/license/KrakenStack/kraken-pedestal?style=flat-square">
+  </a>
+  <a href="https://github.com/KrakenStack/kraken-pedestal">
+    <img src="https://img.shields.io/github/last-commit/KrakenStack/kraken-pedestal?style=flat-square">
+  </a>
+</p>
 
-    OCLI_UTIL --> UTIL_B64["b64"]
-    OCLI_UTIL --> UTIL_YAML["yaml2json"]
+---
 
-%% ========== 内部实现层 (internal) ==========
-    subgraph INTERNAL ["internal/ (Implementation)"]
-        DEPLOY["deploy/"] --> EXECUTOR["executor (Local/SSH)"]
-        DEPLOY --> INSTALLER["installer"]
-        DEPLOY --> CLUSTER["cluster"]
-        DEPLOY --> CERT["certificate"]
-        DEPLOY --> MW_ENGINE["middleware (helm)"]
+## Overview
 
-        DIAGNOSE["diagnose/"] --> DIAG_SVC_IMPL["service.go"]
-        DIAGNOSE --> DIAG_POD_IMPL["podtopod.go"]
-        DIAGNOSE --> DIAG_NODE_IMPL["nodereach.go"]
-        DIAGNOSE --> DIAG_FAULT["fault.go"]
+**Kraken Pedestal** is a Go-based infrastructure operations toolkit for managing and operating **Linux systems, Kubernetes clusters, cloud-native applications, and GPU workloads**.
 
-        NETUTIL["netutil/"] --> PING["ping.go"]
-        NETUTIL --> TCPTRACE["tcptrace.go"]
-        NETUTIL --> MTU["mtu.go"]
+The project brings commonly used infrastructure operations into a unified CLI and provides reusable components for higher-level automation.
 
-        SYSINFO["sysinfo/"] --> PROC["proc.go"]
-        OUTPUT["output/"] --> PRINTER["printer.go"]
-    end
+It currently focuses on the following areas:
 
-%% ========== 公共库层 (pkg) ==========
-    subgraph PKG ["pkg/ (Reusable Libraries)"]
-        LOGGER["logger/"]
-        RATELIMIT["ratelimit/"]
-        K8SCLIENT["k8sclient/"]
-        HELM["helm/"]
-    end
+* **Basic** — system information and basic host operations
+* **Ops Tools** — infrastructure and system diagnostic utilities
+* **Kubernetes Cluster** — Kubernetes cluster lifecycle and management
+* **Helm Deploy** — Helm-based application deployment and management
+* **GPU Scheduling** — GPU resource management based on HAMi and Kubernetes DRA
 
-%% ========== 命令与实现的调用关系（虚线） ==========
-    K8S_INIT -.-> CLUSTER
-    K8S_JOIN -.-> CLUSTER
-    K8S_UPGRADE -.-> CLUSTER
-    K8S_RESET -.-> CLUSTER
-    K8S_INSTALL -.-> INSTALLER
-    K8S_INSTALL -.-> EXECUTOR
-    K8S_CERT -.-> CERT
+The long-term goal is to provide a unified foundation for infrastructure engineers to **inspect, provision, configure, deploy, and operate Kubernetes-based infrastructure**.
 
-    MW_MYSQL -.-> MW_ENGINE
-    MW_REDIS -.-> MW_ENGINE
-    MW_KAFKA -.-> MW_ENGINE
+---
 
-    DIAG_SVC -.-> DIAG_SVC_IMPL
-    DIAG_POD -.-> DIAG_POD_IMPL
-    DIAG_NODE -.-> DIAG_NODE_IMPL
-    K8S_POD -.-> DIAG_FAULT
+## Why Kraken Pedestal?
 
-    NET_TRACE -.-> TCPTRACE
-    NET_TRACE -.-> MTU
+Infrastructure operations often require many independent tools:
 
-    SYS_TOP -.-> PROC
-    SYS_FD -.-> PROC
-    SYS_DISK -.-> PROC
+```text
+Linux
+ ├── systemctl
+ ├── ip
+ ├── mount
+ ├── lsof
+ ├── dmidecode
+ └── ...
 
-    UTIL_B64 -.-> PKG
-    UTIL_YAML -.-> PKG
+Kubernetes
+ ├── kubectl
+ ├── kubeadm
+ ├── kubelet
+ └── ...
 
-%% ========== 内部模块对公共库的依赖（虚线） ==========
-    CLUSTER -.-> K8SCLIENT
-    CLUSTER -.-> LOGGER
-    INSTALLER -.-> EXECUTOR
-    MW_ENGINE -.-> HELM
-    MW_ENGINE -.-> LOGGER
-    DIAG_SVC_IMPL -.-> K8SCLIENT
-    DIAG_SVC_IMPL -.-> OUTPUT
-    DIAG_FAULT -.-> K8SCLIENT
-    NETUTIL -.-> LOGGER
-    SYSINFO -.-> LOGGER
-    OUTPUT -.-> PKG
+Helm
+ └── helm
 
-%% ========== 样式配置 ==========
-    classDef cmd fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
-    classDef impl fill:#f3e5f5,stroke:#4a148c,stroke-width:2px;
-    classDef pkg fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px;
-
-    class KRAKEN,DCLI,OCLI,DCLI_K8S,DCLI_MW,K8S_INSTALL,K8S_INIT,K8S_JOIN,K8S_UPGRADE,K8S_RESET,K8S_CERT,MW_MYSQL,MW_REDIS,MW_KAFKA cmd;
-    class OCLI_NET,OCLI_K8S_DIAG,OCLI_SYS,OCLI_UTIL,NET_DIAG,NET_TRACE,DIAG_SVC,DIAG_POD,DIAG_NODE,K8S_POD,K8S_NODE,SYS_TOP,SYS_FD,SYS_DISK,UTIL_B64,UTIL_YAML cmd;
-    class DEPLOY,EXECUTOR,INSTALLER,CLUSTER,CERT,MW_ENGINE,DIAGNOSE,DIAG_SVC_IMPL,DIAG_POD_IMPL,DIAG_NODE_IMPL,DIAG_FAULT,NETUTIL,PING,TCPTRACE,MTU,SYSINFO,PROC,OUTPUT,PRINTER impl;
-    class LOGGER,RATELIMIT,K8SCLIENT,HELM pkg;
+GPU
+ ├── nvidia-smi
+ ├── HAMi
+ └── DRA
 ```
 
+Each tool has its own command interface, configuration model, output format, and error handling.
 
-## 完整的目录结构
+Kraken Pedestal attempts to provide a unified operational layer:
+
 ```text
-kraken/
+                    Kraken
+                      │
+          ┌───────────┴───────────┐
+          │                       │
+      CLI Interface          Common Runtime
+          │                       │
+          │          ┌────────────┼────────────┐
+          │          │            │            │
+          ▼          ▼            ▼            ▼
+       Basic      Config       Logger       Error
+          │
+          ├──────── Ops Tools
+          │
+          ├──────── Kubernetes
+          │
+          ├──────── Helm
+          │
+          └──────── GPU
+                       │
+                  ┌────┴────┐
+                  │         │
+                 HAMi      DRA
+```
+
+The project is therefore not intended to replace every existing infrastructure tool.
+
+Instead, it provides a **common operational interface and reusable implementation layer** around infrastructure workflows.
+
+---
+
+# Features
+
+## Basic
+
+The `basic` module provides fundamental host and operating-system inspection capabilities.
+
+Typical functionality includes:
+
+* Host information
+* Operating system information
+* Kernel information
+* CPU architecture
+* Machine ID
+* Boot ID
+* Hostname
+* Filesystem information
+* Runtime environment information
+
+Example:
+
+```bash
+kraken basic system-info
+```
+
+The collected information is represented as structured data and can be rendered in different formats.
+
+```bash
+kraken basic system-info --output table
+```
+
+```bash
+kraken basic system-info --output json
+```
+
+```bash
+kraken basic system-info --output yaml
+```
+
+The purpose of the `basic` module is to provide the foundation for higher-level system diagnostics.
+
+---
+
+# Ops Tools
+
+The `ops-tools` area contains commonly required infrastructure and system operation capabilities.
+
+The goal is to provide frequently used operational functions through a consistent CLI rather than requiring engineers to remember a large collection of independent commands.
+
+Typical areas include:
+
+```text
+Ops Tools
+│
+├── System
+│   ├── CPU
+│   ├── Memory
+│   ├── Disk
+│   ├── Filesystem
+│   └── Process
+│
+├── Network
+│   ├── Interface
+│   ├── Route
+│   ├── DNS
+│   └── Connectivity
+│
+├── Storage
+│   ├── Block Device
+│   ├── Mount
+│   └── Filesystem
+│
+└── Diagnostics
+    ├── Process
+    ├── IO
+    └── System Health
+```
+
+This area is intentionally modular so that new operational tools can be added without changing the overall CLI architecture.
+
+---
+
+# Kubernetes Cluster
+
+Kubernetes cluster management is one of the core capabilities of Kraken Pedestal.
+
+The Kubernetes module is intended to provide a unified interface for common cluster lifecycle operations.
+
+Conceptually:
+
+```text
+Kubernetes
+│
+├── Cluster
+│   ├── Create
+│   ├── Configure
+│   ├── Join
+│   ├── Upgrade
+│   └── Delete
+│
+├── Node
+│   ├── Add
+│   ├── Remove
+│   ├── Drain
+│   └── Inspect
+│
+├── Component
+│   ├── Control Plane
+│   ├── kubelet
+│   ├── CNI
+│   └── Runtime
+│
+└── Diagnostics
+    ├── Cluster
+    ├── Node
+    └── Workload
+```
+
+The project is intended to work with common Kubernetes components and infrastructure tooling rather than implementing an alternative Kubernetes distribution.
+
+For example:
+
+```text
+Kraken
+   │
+   ├── kubeadm
+   ├── containerd
+   ├── kubectl
+   ├── CNI
+   └── Kubernetes API
+```
+
+Kraken acts as an orchestration and operational layer around these components.
+
+---
+
+# Helm Deployment
+
+Kraken Pedestal provides Helm-oriented deployment capabilities for Kubernetes applications.
+
+The Helm module is designed around the application lifecycle:
+
+```text
+Chart
+  │
+  ▼
+Repository / Local Chart
+  │
+  ▼
+Values
+  │
+  ▼
+Release
+  │
+  ├── Install
+  ├── Upgrade
+  ├── Rollback
+  ├── Status
+  └── Uninstall
+```
+
+Typical operations include:
+
+```bash
+kraken helm deploy
+```
+
+```bash
+kraken helm upgrade
+```
+
+```bash
+kraken helm status
+```
+
+```bash
+kraken helm rollback
+```
+
+```bash
+kraken helm uninstall
+```
+
+The exact command structure may evolve as the Helm module develops.
+
+The design goal is to make application deployment consistent with the rest of the Kraken CLI.
+
+---
+
+# GPU Infrastructure
+
+GPU infrastructure is an important part of the Kraken roadmap.
+
+Modern Kubernetes GPU environments increasingly require more than simple device discovery.
+
+A complete GPU platform may involve:
+
+```text
+GPU
+│
+├── Discovery
+│
+├── Device Plugin
+│
+├── Resource Allocation
+│
+├── Scheduling
+│
+├── Isolation
+│
+└── Workload Management
+```
+
+Kraken Pedestal currently focuses on integrating GPU scheduling and resource management with Kubernetes.
+
+---
+
+# HAMi
+
+[HAMi](https://github.com/Project-HAMi/HAMi) provides GPU virtualization and scheduling capabilities for Kubernetes environments.
+
+Kraken Pedestal integrates HAMi-related operations into the broader infrastructure workflow.
+
+The intended workflow is:
+
+```text
+Kubernetes Cluster
+        │
+        ▼
+     GPU Node
+        │
+        ▼
+       HAMi
+        │
+        ├── GPU Discovery
+        ├── GPU Allocation
+        ├── GPU Isolation
+        └── GPU Scheduling
+        │
+        ▼
+     Workload
+```
+
+This allows GPU-related infrastructure operations to be managed together with the rest of the Kubernetes environment.
+
+---
+
+# Kubernetes DRA
+
+Kraken Pedestal also targets Kubernetes **Dynamic Resource Allocation (DRA)**.
+
+DRA provides a Kubernetes-native mechanism for allocating specialized resources to workloads.
+
+For GPU infrastructure, the conceptual workflow is:
+
+```text
+Pod
+ │
+ ▼
+ResourceClaim
+ │
+ ▼
+DRA
+ │
+ ▼
+GPU Resource
+ │
+ ▼
+Node
+```
+
+Kraken Pedestal aims to provide operational tooling around this workflow.
+
+The GPU scheduling layer is intended to evolve toward supporting multiple resource allocation mechanisms rather than coupling the entire project to a single GPU implementation.
+
+---
+
+# HAMi vs DRA
+
+HAMi and DRA address GPU resource management from different architectural perspectives.
+
+A simplified view:
+
+```text
+                  GPU Workload
+                       │
+             ┌─────────┴─────────┐
+             │                   │
+            HAMi                DRA
+             │                   │
+       GPU virtualization    Resource allocation
+             │                   │
+             └─────────┬─────────┘
+                       │
+                    Kubernetes
+```
+
+Kraken Pedestal keeps these integrations modular so that GPU infrastructure can evolve independently from the core Kubernetes functionality.
+
+This also allows the project to support different GPU environments without making the entire CLI dependent on a single scheduler implementation.
+
+---
+
+# Architecture
+
+Kraken Pedestal follows a layered architecture.
+
+```text
+┌───────────────────────────────────────────────┐
+│                    CLI                        │
+│                                               │
+│  basic / ops / cluster / helm / gpu / ...    │
+└───────────────────────┬───────────────────────┘
+                        │
+┌───────────────────────▼───────────────────────┐
+│                 Application                   │
+│                                               │
+│   Cluster / Deploy / GPU / System Operations │
+└───────────────────────┬───────────────────────┘
+                        │
+┌───────────────────────▼───────────────────────┐
+│                  Runtime                      │
+│                                               │
+│ Configuration / Logger / Clients / Context   │
+└───────────────────────┬───────────────────────┘
+                        │
+        ┌───────────────┼────────────────┐
+        │               │                │
+        ▼               ▼                ▼
+   Kubernetes         Helm             System
+       │                │                │
+       ▼                ▼                ▼
+ Kubernetes API      Helm API        Linux / OS
+        │
+        ▼
+   GPU Infrastructure
+      ┌──────┴──────┐
+      │             │
+     HAMi          DRA
+```
+
+The architecture is intentionally divided into several layers.
+
+---
+
+# CLI Layer
+
+The CLI layer is responsible for:
+
+* Command registration
+* Command hierarchy
+* Flag parsing
+* Input validation
+* Command lifecycle
+* Output selection
+
+The CLI should remain relatively thin.
+
+It should orchestrate application logic rather than contain large amounts of infrastructure implementation.
+
+---
+
+# Runtime Layer
+
+Runtime initialization connects the application's configuration and infrastructure dependencies.
+
+Conceptually:
+
+```text
+CLI
+ │
+ ▼
+Configuration
+ │
+ ▼
+Runtime
+ │
+ ├── Logger
+ ├── Kubernetes Client
+ ├── Helm Client
+ ├── System Runtime
+ └── GPU Runtime
+```
+
+This allows individual commands to consume initialized dependencies without having to repeatedly implement initialization logic.
+
+---
+
+# Configuration
+
+Kraken Pedestal is designed around a unified configuration model.
+
+Instead of maintaining independent configuration files for every module, the application can use a single configuration structure containing multiple sections.
+
+Example:
+
+```yaml
+basic:
+  concurrency: 8
+
+kubernetes:
+  kubeconfig: ~/.kube/config
+
+helm:
+  timeout: 5m
+
+gpu:
+  runtime: hami
+```
+
+Conceptually:
+
+```text
+config.yaml
+│
+├── basic
+│
+├── ops
+│
+├── kubernetes
+│
+├── helm
+│
+└── gpu
+    ├── hami
+    └── dra
+```
+
+This provides a consistent configuration model as new modules are introduced.
+
+---
+
+# Logging
+
+Kraken Pedestal uses Go's `log/slog` as the foundation of its logging system.
+
+The project provides a common logging abstraction for all modules.
+
+The logger is designed to support:
+
+* Debug
+* Info
+* Warn
+* Error
+* Structured attributes
+* Human-readable terminal output
+* Colored log levels
+* File output
+* Log rotation
+* Context-aware logging
+
+Example:
+
+```text
+[ 26-09-06/13:10:20 ] INF: cluster initialization started
+[ 26-09-06/13:10:21 ] DEB: loading cluster configuration
+[ 26-09-06/13:10:22 ] INF: kubelet configuration completed
+[ 26-09-06/13:10:23 ] ERR: failed to initialize CNI
+```
+
+The goal is to provide consistent logging behavior across:
+
+```text
+Basic
+Ops Tools
+Kubernetes
+Helm
+GPU
+```
+
+---
+
+# Error Handling
+
+Infrastructure operations often fail because of external conditions:
+
+* missing system dependencies
+* invalid configuration
+* unavailable nodes
+* Kubernetes API errors
+* Helm failures
+* network problems
+* GPU device problems
+
+Kraken Pedestal therefore uses a common error model to preserve the original error while adding operational context.
+
+Conceptually:
+
+```text
+System Error
+     │
+     ▼
+Infrastructure Error
+     │
+     ▼
+Kraken Error
+     │
+     ▼
+CLI
+```
+
+Example:
+
+```go
+return kerror.Wrap(
+    kerror.CodeSystem,
+    "failed to collect system information",
+    err,
+)
+```
+
+This allows errors to remain useful for both humans and higher-level callers.
+
+---
+
+# Output
+
+Kraken separates data collection from presentation.
+
+```text
+                 Operation
+                    │
+                    ▼
+                Result Model
+                    │
+          ┌─────────┼─────────┐
+          │         │         │
+          ▼         ▼         ▼
+        Table      JSON      YAML
+```
+
+Human-readable output:
+
+```bash
+kraken basic system-info
+```
+
+Machine-readable output:
+
+```bash
+kraken basic system-info --output json
+```
+
+This separation is particularly important for infrastructure automation.
+
+---
+
+# Command Structure
+
+The CLI is organized by infrastructure domain.
+
+The current conceptual command tree is:
+
+```text
+kraken
+│
+├── basic
+│   └── system-info
+│
+├── ops
+│   ├── system
+│   ├── network
+│   ├── storage
+│   └── diagnostics
+│
+├── cluster
+│   ├── create
+│   ├── join
+│   ├── node
+│   ├── upgrade
+│   └── ...
+│
+├── helm
+│   ├── deploy
+│   ├── upgrade
+│   ├── status
+│   ├── rollback
+│   └── uninstall
+│
+└── gpu
+    ├── hami
+    ├── dra
+    └── ...
+```
+
+The exact commands may change as the project evolves.
+
+The important principle is that the command hierarchy reflects the infrastructure domain rather than individual implementation details.
+
+---
+
+# Project Structure
+
+The project follows a Go-oriented modular structure.
+
+A conceptual structure is:
+
+```text
+.
 ├── cmd/
-│   ├── root.go                         # 根命令入口
-│   ├── dcli/                           # 🟢 Deployment CLI (建)
-│   │   ├── dcli.go                     # dcli 根命令
-│   │   ├── k8s/                        # K8s 集群部署
-│   │   │   ├── k8s.go                  # dcli k8s 根
-│   │   │   ├── install.go              # dcli k8s install
-│   │   │   ├── init.go                 # dcli k8s init
-│   │   │   ├── join.go                 # dcli k8s join
-│   │   │   ├── upgrade.go              # dcli k8s upgrade
-│   │   │   ├── reset.go                # dcli k8s reset
-│   │   │   └── cert.go                 # dcli k8s cert
-│   │   └── middleware/                 # 中间件部署
-│   │       ├── middleware.go           # dcli middleware 根
-│   │       ├── mysql.go                # dcli middleware mysql
-│   │       ├── redis.go                # dcli middleware redis
-│   │       └── kafka.go                # dcli middleware kafka
-│   └── ocli/                           # 🔵 Operations CLI (修)
-│       ├── ocli.go                     # ocli 根命令
-│       ├── net/                        # 网络诊断
-│       │   ├── net.go                  # ocli net 根
-│       │   ├── diagnose.go             # ocli net diagnose (service/pod-to-pod/node-reach)
-│       │   └── trace.go                # ocli net trace (TCP MTR)
-│       ├── k8s/                        # K8s 诊断
-│       │   ├── k8s.go                  # ocli k8s 根
-│       │   ├── pod.go                  # ocli k8s pod fault
-│       │   └── node.go                 # ocli k8s node health
-│       ├── sys/                        # 系统分析
-│       │   ├── sys.go                  # ocli sys 根
-│       │   ├── top.go                  # ocli sys top (cpu/mem/io)
-│       │   ├── fd.go                   # ocli sys fd
-│       │   └── disk.go                 # ocli sys disk
-│       └── util/                       # 通用工具
-│           ├── util.go                 # ocli util 根
-│           ├── b64.go                  # ocli util b64
-│           └── yaml.go                 # ocli util yaml2json
+│   ├── basic/
+│   ├── ops/
+│   ├── cluster/
+│   ├── helm/
+│   └── gpu/
+│
 ├── internal/
-│   ├── deploy/                         # 🟢 dcli 核心实现
-│   │   ├── executor/                   # 执行器 (Local/SSH)
-│   │   │   ├── executor.go             # Interface 定义
-│   │   │   ├── local.go
-│   │   │   └── ssh.go
-│   │   ├── installer/                  # 安装逻辑
-│   │   │   ├── kubeadm.go
-│   │   │   ├── containerd.go
-│   │   │   └── components.go
-│   │   ├── cluster/                    # 集群操作
-│   │   │   ├── init.go
-│   │   │   ├── join.go
-│   │   │   ├── upgrade.go
-│   │   │   └── reset.go
-│   │   ├── certificate/                # 证书管理
-│   │   │   ├── check.go
-│   │   │   └── renew.go
-│   │   └── middleware/                 # 中间件部署引擎
-│   │       ├── helm.go                 # Helm 操作封装
-│   │       ├── mysql.go
-│   │       ├── redis.go
-│   │       └── kafka.go
-│   ├── diagnose/                       # 🔵 ocli 核心实现
-│   │   ├── service.go                  # Service 诊断
-│   │   ├── podtopod.go                 # Pod 互访诊断
-│   │   ├── nodereach.go                # Pod 访问 Node 诊断
-│   │   └── fault.go                    # Pod 故障诊断
-│   ├── netutil/                        # 网络探测
-│   │   ├── ping.go
-│   │   ├── tcptrace.go
-│   │   └── mtu.go
-│   ├── sysinfo/                        # 系统信息采集
-│   │   └── proc.go
-│   └── output/                         # 统一输出
-│       └── printer.go
-├── pkg/                                # 公共库 (可复用)
-│   ├── logger/                         # 日志
-│   │   └── logger.go
-│   ├── ratelimit/                      # 限流
-│   │   └── limiter.go
-│   ├── k8sclient/                      # K8s Client 封装
-│   │   └── client.go
-│   └── helm/                           # Helm SDK 封装
-│       └── helm.go
-├── configs/                            # 配置模板
-│   ├── cluster.yaml                    # K8s 集群配置
-│   ├── middleware/
-│   │   ├── mysql-values.yaml
-│   │   ├── redis-values.yaml
-│   │   └── kafka-values.yaml
-│   └── k8s/
-│       ├── kubeadm-config.yaml
-│       └── kubelet-config.yaml
-├── scripts/
-│   ├── build.sh
-│   └── install.sh
-├── test/
-│   └── e2e/
+│   ├── basic/
+│   ├── ops/
+│   ├── cluster/
+│   ├── helm/
+│   └── gpu/
+│
+├── pkg/
+│   ├── logger/
+│   ├── error/
+│   ├── printer/
+│   ├── config/
+│   └── ...
+│
+├── models/
+│   └── ...
+│
+├── configs/
+│   └── ...
+│
+├── Makefile
 ├── go.mod
 ├── go.sum
-├── main.go
 └── README.md
 ```
+
+The actual structure may evolve as individual modules become more complex.
+
+---
+
+# Supported Infrastructure
+
+Kraken Pedestal is primarily designed for Linux and Kubernetes infrastructure environments.
+
+The project is expected to interact with components such as:
+
+```text
+Operating System
+      │
+      ├── Linux
+      │
+      ├── systemd
+      │
+      ├── networking
+      │
+      └── storage
+      │
+      ▼
+Container Runtime
+      │
+      └── containerd
+      │
+      ▼
+Kubernetes
+      │
+      ├── kubeadm
+      ├── kubelet
+      ├── kubectl
+      └── Kubernetes API
+      │
+      ├── Helm
+      │
+      └── GPU
+           ├── HAMi
+           └── DRA
+```
+
+The exact supported versions depend on the implementation of each module.
+
+---
+
+# Development
+
+## Requirements
+
+A development environment should provide:
+
+* Go
+* Git
+* Make
+* Linux environment for system-level functionality
+* Kubernetes environment for cluster-related functionality
+* Helm for Helm-related development
+* GPU-enabled Kubernetes environment for GPU functionality
+
+Some functionality can be developed and tested independently.
+
+For example:
+
+```text
+Basic / Ops Tools
+    │
+    └── Linux environment
+
+Cluster
+    │
+    └── Kubernetes environment
+
+Helm
+    │
+    └── Kubernetes + Helm
+
+GPU
+    │
+    └── Kubernetes + GPU + HAMi / DRA
+```
+
+---
+
+# Clone
+
+```bash
+git clone https://github.com/KrakenStack/kraken-pedestal.git
+
+cd kraken-pedestal
+```
+
+---
+
+# Build
+
+Build the project using the provided Makefile:
+
+```bash
+make build
+```
+
+Or build directly using Go:
+
+```bash
+go build ./...
+```
+
+The generated binary is placed under the project's build output directory according to the Makefile configuration.
+
+---
+
+# Development Workflow
+
+A typical development workflow is:
+
+```bash
+make fmt
+make check
+make test
+make build
+```
+
+Individual checks can also be run directly:
+
+```bash
+go test ./...
+```
+
+```bash
+go vet ./...
+```
+
+```bash
+gofmt -w .
+```
+
+---
+
+# Testing
+
+The project uses Go's standard testing framework.
+
+Run all tests:
+
+```bash
+go test ./...
+```
+
+Run tests with verbose output:
+
+```bash
+go test -v ./...
+```
+
+Run coverage:
+
+```bash
+make coverage
+```
+
+Infrastructure-related functionality should be tested at multiple levels where practical:
+
+```text
+Unit Tests
+    │
+    ▼
+Component Tests
+    │
+    ▼
+Integration Tests
+    │
+    ▼
+Cluster Tests
+```
+
+Kubernetes and GPU functionality may require dedicated test environments.
+
+---
+
+# Design Principles
+
+## 1. Infrastructure First
+
+Kraken Pedestal focuses on infrastructure operations rather than application business logic.
+
+Its primary concerns are:
+
+```text
+System
+Kubernetes
+Deployment
+GPU
+Operations
+```
+
+---
+
+## 2. CLI Should Stay Thin
+
+Command implementations should primarily handle:
+
+* argument parsing
+* flag parsing
+* validation
+* runtime invocation
+* output
+
+Infrastructure logic should remain outside the Cobra command implementation.
+
+Prefer:
+
+```text
+cmd
+ │
+ ▼
+service / runtime
+ │
+ ▼
+implementation
+```
+
+instead of:
+
+```text
+cmd
+ └── all infrastructure logic
+```
+
+---
+
+## 3. Separate Operation From Presentation
+
+Infrastructure components should return structured results.
+
+The CLI decides how those results are rendered.
+
+```text
+Operation
+    │
+    ▼
+Model
+    │
+    ├── Table
+    ├── JSON
+    └── YAML
+```
+
+---
+
+## 4. Modular Infrastructure
+
+Kubernetes, Helm, and GPU functionality should remain independently evolvable.
+
+For example:
+
+```text
+Kubernetes
+    │
+    ├── Cluster
+    │
+    ├── Helm
+    │
+    └── GPU
+          ├── HAMi
+          └── DRA
+```
+
+A change to HAMi integration should not require changes to unrelated system-information functionality.
+
+---
+
+## 5. Reusable Runtime
+
+Common infrastructure such as:
+
+* configuration
+* logging
+* error handling
+* Kubernetes clients
+* output formatting
+
+should be initialized and reused through the runtime layer.
+
+---
+
+# Roadmap
+
+The project is currently focused on establishing a unified infrastructure operations foundation.
+
+### Current
+
+* [x] Go CLI foundation
+* [x] Cobra command hierarchy
+* [x] Basic system information
+* [x] Common configuration
+* [x] Runtime initialization
+* [x] Structured logging
+* [x] Common error handling
+* [x] Table / JSON / YAML output
+* [x] Basic Ops Tools
+* [x] Kubernetes cluster functionality
+* [x] Helm deployment functionality
+* [x] HAMi integration
+* [x] Kubernetes DRA exploration / implementation
+
+### Planned
+
+* [ ] Expand system diagnostic tools
+* [ ] Expand Kubernetes cluster lifecycle operations
+* [ ] Improve cluster preflight checks
+* [ ] Improve Helm application lifecycle management
+* [ ] Expand GPU diagnostics
+* [ ] Expand HAMi operations
+* [ ] Expand DRA resource management
+* [ ] GPU health and fault diagnostics
+* [ ] More comprehensive integration tests
+* [ ] Cross-platform improvements
+* [ ] Automated release pipeline
+* [ ] More detailed documentation and examples
+
+---
+
+# Roadmap Direction
+
+The long-term direction of Kraken Pedestal can be summarized as:
+
+```text
+                 Kraken Pedestal
+                       │
+        ┌──────────────┼──────────────┐
+        │              │              │
+      System        Kubernetes      GPU
+        │              │              │
+        │              │        ┌─────┴─────┐
+        │              │        │           │
+        │            Helm      HAMi        DRA
+        │              │        │           │
+        └──────────────┴────────┴───────────┘
+                       │
+                       ▼
+             Infrastructure Platform
+```
+
+The ultimate goal is to make common infrastructure workflows accessible through one consistent operational framework.
+
+---
+
+# Contributing
+
+Contributions are welcome.
+
+Before submitting a pull request:
+
+1. Format the code.
+2. Run static analysis.
+3. Run tests.
+4. Build the project.
+5. Keep commits focused.
+6. Update documentation when behavior changes.
+
+Recommended validation:
+
+```bash
+make fmt
+make check
+make test
+make build
+```
+
+For infrastructure-related changes, please also describe:
+
+* supported environment
+* Kubernetes version
+* runtime requirements
+* required system dependencies
+* GPU requirements, if applicable
+* expected operational behavior
+
+---
+
+# Commit Convention
+
+The project follows a conventional commit style:
+
+```text
+<type>(<scope>): <description>
+```
+
+Examples:
+
+```text
+feat(basic): add system information command
+```
+
+```text
+feat(cluster): add kubeadm cluster initialization
+```
+
+```text
+feat(helm): add application deployment
+```
+
+```text
+feat(gpu): add hami resource management
+```
+
+```text
+feat(dra): add gpu resource claim support
+```
+
+```text
+fix(cluster): fix kubelet initialization
+```
+
+```text
+refactor(logger): simplify slog handler
+```
+
+```text
+test(gpu): add hami integration tests
+```
+
+```text
+docs(readme): update project architecture
+```
+
+Common commit types:
+
+| Type       | Description             |
+| ---------- | ----------------------- |
+| `feat`     | New functionality       |
+| `fix`      | Bug fix                 |
+| `refactor` | Code restructuring      |
+| `perf`     | Performance improvement |
+| `test`     | Tests                   |
+| `docs`     | Documentation           |
+| `build`    | Build system            |
+| `ci`       | CI/CD                   |
+| `chore`    | Maintenance             |
+
+---
+
+# Project Status
+
+Kraken Pedestal is currently under active development.
+
+The project is establishing a unified infrastructure operations framework covering:
+
+```text
+Linux
+  ↓
+System Operations
+  ↓
+Kubernetes
+  ↓
+Helm
+  ↓
+GPU Infrastructure
+  ↓
+HAMi / DRA
+```
+
+APIs, command structures, configuration formats, and internal package layouts may change before the project reaches a stable release.
+
+For production environments, use a tagged release when available.
+
+---
+
+# License
+
+See the `LICENSE` file for the applicable license.
+
+---
+
+# Acknowledgements
+
+Kraken Pedestal builds upon the Kubernetes and cloud-native ecosystem.
+
+The project integrates with or is designed to work alongside technologies including:
+
+* Kubernetes
+* kubeadm
+* containerd
+* Helm
+* HAMi
+* Kubernetes DRA
+* Go
+* Cobra
+* `log/slog`
+
+---
+
+<p align="center">
+  <strong>Kraken Pedestal</strong>
+</p>
+
+<p align="center">
+  Kubernetes · Infrastructure · Operations · GPU
+</p>
