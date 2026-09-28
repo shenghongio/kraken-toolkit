@@ -10,9 +10,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/real-sushenghong/kraken-toolkit">GitHub</a>
+  <a href="https://github.com/shenghongio/kraken-toolkit">GitHub</a>
   · 
-  <a href="https://github.com/real-sushenghong/kraken-toolkit/issues">Issues</a>
+  <a href="https://github.com/shenghongio/kraken-toolkit/issues">Issues</a>
 </p>
 
 <p align="center">
