@@ -3,13 +3,15 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	
 	"github.com/kraken-pedestal/cmd/basic"
+	"github.com/kraken-pedestal/cmd/cluster"
 	"github.com/kraken-pedestal/internal/config"
 	"github.com/kraken-pedestal/pkg/cli"
 	"github.com/kraken-pedestal/pkg/logger"
 	"github.com/kraken-pedestal/utils"
 	"github.com/spf13/cobra"
-	"log/slog"
 )
 
 var globalFlags config.GlobalFlags
@@ -22,7 +24,7 @@ func NewRootCmd() *cobra.Command {
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		//Long:          `Kraken is a unified CLI tool for deploying and operating Kubernetes clusters and middleware.`,
-
+		
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
@@ -41,7 +43,7 @@ func NewRootCmd() *cobra.Command {
 	}
 	// Disable Cobra's auto-generated completion
 	cmd.CompletionOptions.DisableDefaultCmd = true
-
+	
 	// Global Flags
 	cmd.PersistentFlags().StringVar(
 		&globalFlags.Config,
@@ -59,7 +61,7 @@ func NewRootCmd() *cobra.Command {
 		false,
 		"The log includes code locations (file:line number)",
 	)
-
+	
 	// Command Groups
 	cmd.AddGroup(
 		//&cobra.Group{ID: GroupDeploy, Title: "Deploy Commands:"},
@@ -72,22 +74,27 @@ func NewRootCmd() *cobra.Command {
 			Title: "Settings Commands",
 		},
 		&cobra.Group{
+			ID:    cli.GroupCluster,
+			Title: "Cluster Commands",
+		},
+		&cobra.Group{
 			ID:    cli.GroupOther,
 			Title: "Other Commands",
 		},
 	)
-
+	
 	// Commands
 	cmd.AddCommand(
 		basic.NewBasicCmd(),
 		VersionCmd(),
 		NewCompletionCmd(),
+		cluster.NewClusterCommand(),
 	)
-
+	
 	// Custom help information
 	cmd.SetHelpFunc(func(command *cobra.Command, args []string) {
 		out := cmd.OutOrStdout()
-
+		
 		// root command
 		if command == command.Root() {
 			// Description
@@ -96,7 +103,7 @@ func NewRootCmd() *cobra.Command {
 			utils.PrintRootHelp(out, command)
 			return
 		}
-
+		
 		// Subcommand
 		utils.PrintCommandHelp(out, command)
 	})
@@ -117,7 +124,7 @@ func initLogger(cmd *cobra.Command) error {
 	if err != nil {
 		return fmt.Errorf("get log source: %w", err)
 	}
-
+	
 	logger.Init(logger.ConfigOptions{
 		Level:      level,
 		Color:      true,
@@ -134,13 +141,13 @@ func loadConfig(cmd *cobra.Command) error {
 	if globalFlags.Config == "" {
 		slog.Debug("config file is empty")
 		return nil
-
+		
 	}
 	cfg, err := config.Load(globalFlags.Config)
 	if err != nil {
 		return err
 	}
-
+	
 	// 把 config 注入 context 供子命令读取
 	ctx := context.WithValue(cmd.Context(), config.ContextKeyConfig, cfg)
 	cmd.SetContext(ctx)

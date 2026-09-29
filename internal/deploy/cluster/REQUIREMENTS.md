@@ -59,6 +59,10 @@ Kraken Pedestal 是一个 Go 语言编写的统一 CLI 工具，用于部署和�
 | **ExecuteFunc** | 执行函数类型，由调用方注入（本地执行或 SSH 远程执行） |
 | **Action** | 集群操作的类别：init / join / reset / upgrade |
 | **拓扑排序** | 基于阶段依赖关系（Dependencies）的排序算法，使用 Kahn 算法 |
+| **Plane** | 多平面部署中的一组节点 + 它们要执行的 Phase 链。如 cp-1（第一个控制平面，执行 init）、workers（worker 节点组，执行 join） |
+| **ClusterDeployer** | 多平面部署编排器，按平面依赖顺序串行执行各平面，平面内节点并发执行 |
+| **RemoteExecutor** | SSH 远程执行器，桥接 Phase 层和 basic/executor，将 `Phase.Command()` 转为 SSH shell 命令 |
+| **LocalExecutor** | 本地执行器，使用 `os/exec` 在本地执行 kubeadm 命令，适合单节点调试和 CI |
 
 ---
 
@@ -186,6 +190,221 @@ preflight ──────┬────────────────�
 - **单阶段执行**：自动解析并执行目标阶段的所有前置依赖
 - **错误处理**：任一阶段失败则终止，保证集群状态一致性
 
+### 3.6 SSH 执行层（FR-4）
+
+#### FR-4.1 设计目标
+
+桥接 Phase 层和已有的 SSH 基础设施，使 PhaseRegistry 无需感知执行方式。
+
+#### FR-4.2 复用策略
+
+| 现有组件 | 路径 | 复用方式 |
+|---|---|---|
+| `executor.Host` | `internal/basic/executor/host.go` | SSH 目标主机（Address/User/Port） |
+| `executor.SSHOptions` | `internal/basic/executor/ssh.go` | 连接参数（私钥/密码/超时） |
+| `executor.RunShell` | `internal/basic/executor/shell.go` | 远程执行单条命令 → stdout/stderr/exitCode |
+| `executor.Executor.Run` | `internal/basic/executor/executor.go` | 并发编排，连接池 + 信号量控制 |
+| `runner.Run` | `internal/basic/runner/runner.go` | 从 Config 构建批量执行 |
+
+#### FR-4.3 LocalExecutor（本地执行）
+
+用于单节点本地调试，直接在本地用 `os/exec` 执行 kubeadm 命令。
+
+```go
+type LocalExecutor struct{}
+
+func (e *LocalExecutor) ExecuteFunc() kubeadm.ExecuteFunc
+```
+
+#### FR-4.4 RemoteExecutor（SSH 远程执行）
+
+核心逻辑：将 `Phase.Command()` 返回的命令切片拼接为 shell 字符串，通过 runner.Run 批量推送到目标节点执行。
+
+```go
+type RemoteExecutor struct {
+    runnerCfg runner.Config
+}
+
+// 从 ClusterConfig.Nodes 构建 SSH 目标列表
+func NewRemoteExecutor(clusterCfg *config.ClusterConfig) (*RemoteExecutor, error)
+
+// 返回 kubeadm.ExecuteFunc，适配 PhaseRegistry.RunAll/RunOne
+func (e *RemoteExecutor) ExecuteFunc() kubeadm.ExecuteFunc
+```
+
+**执行流程**：
+
+```
+PhaseRegistry.RunAll(ctx, cfg, executor.ExecuteFunc())
+    │
+    ▼
+RemoteExecutor.ExecuteFunc()
+    │
+    ├─ phase.Command(cfg)           ← 构建 kubeadm 命令切片
+    ├─ strings.Join(cmd, " ")       ← 转成 shell 字符串
+    │
+    ▼
+runner.Run(ctx, runnerCfg, operation)
+    │
+    ├─ executor.Run(ctx, hosts, operation)
+    │      │
+    │      ├─ SSH 连接池 + 并发控制
+    │      ├─ 对每台 host: RunShell(ctx, host, client, cmdStr)
+    │      │      │
+    │      │      ├─ session.Run(cmd)
+    │      │      └─ Result{Stdout, Stderr, ExitCode, Duration}
+    │      │
+    │      └─ []Result（每台主机一个）
+    │
+    └─ 聚合结果：遇 Error 则返回 phase 失败
+```
+
+#### FR-4.5 核心适配逻辑
+
+```go
+func (e *RemoteExecutor) ExecuteFunc() kubeadm.ExecuteFunc {
+    return func(ctx context.Context, phase kubeadm.Phase, cfg kubeadm.PhaseConfig) error {
+        // 1. 构建 shell 命令
+        args := phase.Command(cfg)
+        cmdStr := strings.Join(args, " ")
+
+        // 2. 定义 SSH operation
+        operation := func(ctx context.Context, host executor.Host,
+                         client *ssh.Client) executor.Result {
+            return executor.RunShell(ctx, host, client, cmdStr)
+        }
+
+        // 3. 批量执行
+        results := runner.Run(ctx, e.runnerCfg, operation)
+
+        // 4. 检查结果
+        for _, r := range results {
+            if r.Error != nil {
+                return fmt.Errorf("host %s: phase %q failed: %w",
+                    r.Host.Address, phase.Name(), r.Error)
+            }
+        }
+        return nil
+    }
+}
+```
+
+### 3.7 多平面部署（FR-5）
+
+#### FR-5.1 核心概念
+
+多平面部署解决多角色节点组的编排问题。核心概念：
+
+- **Plane**：一组相同角色的节点 + 它们要执行的 Phase 链
+- **平面间串行**：按依赖顺序逐个执行平面（如先 init 第一个控制平面，再 join 其他节点）
+- **平面内并发**：同一平面的多个节点并发执行（受 runner.Concurrency 控制）
+
+#### FR-5.2 Plane 定义
+
+```go
+type Plane struct {
+    Name         string                // 平面名称: "cp-1", "workers"
+    Role         string                // 角色: "control-plane" | "worker"
+    Nodes        []config.ClusterNode  // 该平面的节点列表
+    Dependencies []string              // 依赖的前置平面名
+    Concurrency  int                   // 平面内节点并发数
+    RegisterPhases func(*PhaseRegistry) // 该平面要注册的 phases
+}
+
+type ClusterDeployer struct {
+    Planes   []Plane
+    PhaseCfg kubeadm.PhaseConfig
+    Exec     kubeadm.ExecuteFunc  // 注入 SSH 或本地执行器
+}
+```
+
+#### FR-5.3 执行策略
+
+```
+Step 1: Plane-1 (第一个控制平面)
+  └─ 串行执行 init phase 链（preflight → certs → ... → addon）
+  └─ 执行完毕后集群已就绪
+
+Step 2: Plane-2 (其余控制平面，依赖 cp-1)
+  └─ 并发对该平面的所有节点执行 join control-plane phases
+  └─ concurrency = len(nodes) 或用户指定
+
+Step 3: Plane-3 (Worker 组，依赖 cp-1)
+  └─ 并发对所有 worker 节点执行 join phases
+  └─ concurrency = len(nodes) 或用户指定
+```
+
+#### FR-5.4 平面间拓扑排序
+
+平面间也可能存在依赖，使用 Kahn 算法对平面进行排序：
+
+```
+工 -> cp-others -> workers
+```
+
+```go
+func (d *ClusterDeployer) Deploy(ctx context.Context) error {
+    // 1. 拓扑排序平面
+    sorted, err := topoSortPlanes(d.Planes)
+    if err != nil {
+        return fmt.Errorf("plane dependency cycle: %w", err)
+    }
+
+    // 2. 按序执行每个平面
+    for _, plane := range sorted {
+        registry := kubeadm.NewPhaseRegistry()
+        plane.RegisterPhases(registry)
+
+        // 平面内节点并发执行
+        for _, node := range plane.Nodes {
+            cfg := d.PhaseCfg
+            cfg.NodeAddress = node.Address
+            if err := registry.RunAll(ctx, cfg, d.Exec); err != nil {
+                return fmt.Errorf("plane %q node %s: %w",
+                    plane.Name, node.Address, err)
+            }
+        }
+    }
+    return nil
+}
+```
+
+#### FR-5.5 多平面配置示例
+
+```yaml
+cluster:
+  planes:
+    - name: cp-1
+      role: control-plane
+      nodes:
+        - address: 10.0.0.1
+      # phases: init（全量）
+
+    - name: cp-others
+      role: control-plane
+      depends_on: [cp-1]          # 等 cp-1 完成
+      nodes:
+        - address: 10.0.0.2
+        - address: 10.0.0.3       # 两个节点并发 join
+      concurrency: 2
+
+    - name: workers
+      role: worker
+      depends_on: [cp-1]          # 等 cp-1 完成即可
+      nodes:
+        - address: 10.0.0.10
+        - address: 10.0.0.11
+      concurrency: 10
+```
+
+#### FR-5.6 命令扩展
+
+```bash
+kraken cluster deploy                    # 全量多平面部署
+kraken cluster deploy --plane workers    # 只部署某个平面
+kraken cluster deploy --dry-run          # 预览部署计划
+```
+
 ---
 
 ## 4. 架构设计
@@ -214,10 +433,21 @@ preflight ──────┬────────────────�
 │                   kubeadm Command Wrapper                         │
 │                                                                    │
 │  kubeadm binary discovery  →  config generation  →  cmd exec      │
-├──────────────────────────────────────────────────────────────────┤
-│              Infrastructure Layer (复用 existing)                  │
+│                   Executor Layer (桥接层)                          │
 │                                                                    │
-│  SSH Executor  │  Config Loader  │  Logger  │  Result Printer     │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐       │
+│  │  LocalExec   │  │ RemoteExec   │  │ ClusterDeployer  │       │
+│  │  (os/exec)   │  │ (SSH runner) │  │ (多平面编排)      │       │
+│  └──────┬───────┘  └──────┬───────┘  └────────┬─────────┘       │
+│         │                 │                    │                  │
+│         │    ┌────────────┘                    │                  │
+│         ▼    ▼                                 ▼                  │
+│  ┌─────────────────────────────────────────────────────────┐     │
+│  │            Infrastructure Layer (复用 existing)           │     │
+│  │                                                          │     │
+│  │  executor.RunShell  │  executor.Executor.Run  │  runner  │     │
+│  │  Config Loader      │  Logger                │  Printer  │     │
+│  └─────────────────────────────────────────────────────────┘     │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
@@ -590,22 +820,28 @@ kraken-pedestal/
 │       ├── cluster.go                   ← [新增] kraken cluster 根命令
 │       ├── init.go                      ← [新增] kraken cluster init
 │       ├── join.go                      ← [新增] kraken cluster join
+│       ├── deploy.go                    ← [新增] kraken cluster deploy（多平面）
 │       ├── reset.go                     ← [新增] kraken cluster reset（后续）
-│       └── phase/
-│           └── phase.go                 ← [新增] kraken cluster phase list/run
+│       └── phase.go                     ← [新增] kraken cluster phase list/run
 │
 ├── internal/
-│   ├── cluster/
-│   │   ├── kubeadm/
-│   │   │   ├── phase.go                 ← [新增] Phase 接口 + PhaseRegistry
-│   │   │   ├── phase_test.go            ← [新增] 注册器单元测试
-│   │   │   ├── kubeadm.go               ← [新增] kubeadm 二进制封装
-│   │   │   ├── kubeadm_test.go          ← [新增] kubeadm 命令构建测试
-│   │   │   ├── init.go                  ← [新增] init 12个 Phase 实现
-│   │   │   ├── join.go                  ← [新增] join 5个 Phase 实现
-│   │   │   └── config.go                ← [新增] KrakenConfig → kubeadm YAML 生成
-│   │   └── executor/
-│   │       └── remote.go                ← [新增] SSH 执行器封装
+│   ├── deploy/
+│   │   └── cluster/
+│   │       ├── kubeadm/
+│   │       │   ├── phase.go             ← [新增] Phase 接口 + PhaseRegistry
+│   │       │   ├── phase_test.go        ← [新增] 注册器单元测试
+│   │       │   ├── kubeadm.go           ← [新增] kubeadm 二进制封装
+│   │       │   ├── kubeadm_test.go      ← [新增] kubeadm 命令构建测试
+│   │       │   ├── init.go              ← [新增] init 12个 Phase 实现
+│   │       │   ├── init_test.go         ← [新增] init phase 单元测试
+│   │       │   ├── join.go              ← [新增] join 5个 Phase 实现
+│   │       │   ├── join_test.go         ← [新增] join phase 单元测试
+│   │       │   └── config.go            ← [新增] KrakenConfig → kubeadm YAML 生成
+│   │       └── executor/
+│   │           ├── remote.go            ← [新增] SSH 远程执行器（桥接 basic/executor）
+│   │           ├── local.go             ← [新增] 本地执行器（os/exec 调试用）
+│   │           ├── deployer.go          ← [新增] 多平面部署编排器
+│   │           └── deployer_test.go     ← [新增] 多平面部署单元测试
 │   │
 │   └── config/
 │       └── config.go                    ← [修改] ClusterConfig 补全
@@ -623,9 +859,15 @@ cmd/cluster/cluster.go
     ├── cmd/cluster/join.go ──→ internal/cluster/kubeadm/join.go ──→ phase.go
     └── cmd/cluster/phase/phase.go ──→ internal/cluster/kubeadm/phase.go
 
-internal/cluster/kubeadm/kubeadm.go
-    ├── internal/cluster/kubeadm/config.go ──→ internal/config/config.go
-    └── internal/cluster/executor/remote.go ──→ internal/basic/executor/
+internal/deploy/cluster/kubeadm/kubeadm.go
+    ├── internal/deploy/cluster/kubeadm/config.go ──→ internal/config/config.go
+    └── internal/deploy/cluster/executor/remote.go ──→ internal/basic/executor/
+                                                      internal/basic/runner/
+
+internal/deploy/cluster/executor/
+    ├── local.go ──→ kubeadm/phase.go
+    ├── remote.go ──→ kubeadm/phase.go, basic/executor/, basic/runner/
+    └── deployer.go ──→ kubeadm/phase.go, executor/remote.go
 ```
 
 ---
@@ -636,42 +878,54 @@ internal/cluster/kubeadm/kubeadm.go
 
 | 任务 | 文件 | 预计工作量 |
 |---|---|---|
-| Phase 接口 + PhaseRegistry | `internal/cluster/kubeadm/phase.go` | 1d |
-| PhaseRegistry 单元测试 | `internal/cluster/kubeadm/phase_test.go` | 0.5d |
-| kubeadm 二进制封装 | `internal/cluster/kubeadm/kubeadm.go` | 1d |
-| 配置生成器 | `internal/cluster/kubeadm/config.go` | 1d |
+| Phase 接口 + PhaseRegistry | `internal/deploy/cluster/kubeadm/phase.go` | 1d |
+| PhaseRegistry 单元测试 | `internal/deploy/cluster/kubeadm/phase_test.go` | 0.5d |
+| kubeadm 二进制封装 | `internal/deploy/cluster/kubeadm/kubeadm.go` | 1d |
+| 配置生成器 | `internal/deploy/cluster/kubeadm/config.go` | 1d |
 | ClusterConfig 补全 | `internal/config/config.go` | 0.5d |
 
 ### Phase 2：init 实现（优先级 P0）
 
 | 任务 | 文件 | 预计工作量 |
 |---|---|---|
-| 12 个 Init Phase 实现 | `internal/cluster/kubeadm/init.go` | 1d |
-| cluster init 命令 | `cmd/cluster/init.go` | 0.5d |
-| SSH 远程执行封装 | `internal/cluster/executor/remote.go` | 0.5d |
-| cluster 根命令 | `cmd/cluster/cluster.go` | 0.5d |
-| 注册到 root | `cmd/root.go` | 0.5d |
+| 12 个 Init Phase 实现 | `internal/deploy/cluster/kubeadm/init.go` | 1d |
+| Init Phase 单元测试 | `internal/deploy/cluster/kubeadm/init_test.go` | 0.5d |
 
 ### Phase 3：join 实现（优先级 P1）
 
 | 任务 | 文件 | 预计工作量 |
 |---|---|---|
-| 5 个 Join Phase 实现 | `internal/cluster/kubeadm/join.go` | 1d |
-| cluster join 命令 | `cmd/cluster/join.go` | 0.5d |
+| 5 个 Join Phase 实现 | `internal/deploy/cluster/kubeadm/join.go` | 1d |
+| Join Phase 单元测试 | `internal/deploy/cluster/kubeadm/join_test.go` | 0.5d |
 
-### Phase 4：阶段管理（优先级 P1）
+### Phase 4：SSH 执行层（优先级 P1）
 
 | 任务 | 文件 | 预计工作量 |
 |---|---|---|
-| phase list/run 命令 | `cmd/cluster/phase/phase.go` | 1d |
+| LocalExecutor 本地执行器 | `internal/deploy/cluster/executor/local.go` | 0.5d |
+| RemoteExecutor SSH 执行器 | `internal/deploy/cluster/executor/remote.go` | 1d |
+| ClusterDeployer 多平面编排 | `internal/deploy/cluster/executor/deployer.go` | 1d |
+| 多平面部署单元测试 | `internal/deploy/cluster/executor/deployer_test.go` | 0.5d |
 
-### Phase 5：后续扩展（优先级 P2）
+### Phase 5：CLI 命令层（优先级 P1）
+
+| 任务 | 文件 | 预计工作量 |
+|---|---|---|
+| cluster 根命令 | `cmd/cluster/cluster.go` | 0.5d |
+| cluster init 命令 | `cmd/cluster/init.go` | 0.5d |
+| cluster join 命令 | `cmd/cluster/join.go` | 0.5d |
+| cluster deploy 命令（多平面） | `cmd/cluster/deploy.go` | 0.5d |
+| phase list/run 命令 | `cmd/cluster/phase.go` | 1d |
+| 注册到 root | `cmd/root.go` | 0.5d |
+
+### Phase 6：后续扩展（优先级 P2）
 
 | 任务 | 说明 |
 |---|---|
 | cluster reset | kubeadm reset 阶段化 |
 | cluster upgrade | kubeadm upgrade 阶段化 |
 | 集成测试 | 端到端集群创建/加入测试 |
+| kubeadm_test.go | kubeadm 二进制封装单元测试 |
 
 ---
 
@@ -733,10 +987,14 @@ cmd.AddCommand(NewInitCmd(), NewJoinCmd(), NewResetCmd())
 |---|---|---|
 | Phase vs 直接调 kubeadm | Phase 接口 | 可编排、可观测、可测试、可扩展 |
 | 本地 vs SSH 执行 | 可切换 | 通过 ExecuteFunc 注入，单节点本地，多节点 SSH |
+| SSH 桥接方式 | 新建 executor 层，不修改 Phase 层 | Phase 层只关心命令构建，不关心执行方式 |
+| 复用 SSH 基础设施 | 复用 basic/executor + basic/runner | 不重新发明 SSH 连接管理、并发控制、错误处理 |
+| 命令切片 → shell 字符串 | strings.Join | RunShell 接受字符串，非切片参数 |
+| 多节点编排 | ClusterDeployer + Plane 概念 | 按角色分组、平面间串行、平面内并发 |
+| 平面间排序 | Kahn 算法（复用 Phase 层模式） | 与 PhaseRegistry 一致的 DAG 排序经验 |
 | 配置文件 | 单一 cluster.yaml | 与现有 config 模型一致，PersistentPreRun 注入 Context |
 | 错误处理 | 阶段失败 → 终止 | 保证集群状态一致，不支持部分执行（除非显式 --phase） |
 | kubeadm 配置 | 代码生成 | 从 Kraken ClusterConfig 自动生成，避免用户手写两份配置 |
-| 复用 SSH | 复用 basic/executor | 不重新发明 SSH 连接管理，统一错误处理和日志 |
 | 命令分组 | GroupCluster | 已在 groups.go 中预定义 |
 | 拓扑排序 | Kahn 算法 | 标准 DAG 排序算法，可检测循环依赖 |
 

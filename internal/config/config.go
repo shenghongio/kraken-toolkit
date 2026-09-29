@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"os"
 	"strings"
+	
+	"gopkg.in/yaml.v3"
 )
 
 type GlobalFlags struct {
@@ -61,12 +62,7 @@ func Load(path string) (*Config, error) {
 	return &cfg, nil
 }
 
-type DeployConfig struct {
-	//TODO: 具体配置
-}
-
 type ClusterConfig struct {
-	//TODO: 实现具体配置
 	Name              string                  `yaml:"name"`
 	KubernetesVersion string                  `yaml:"kubernetes_version"`
 	PodCIDR           string                  `yaml:"pod_cidr"`
@@ -82,7 +78,7 @@ type ClusterControlPlane struct {
 	CertificateKey string `yaml:"certificate_key"`
 }
 type ClusterContainerRuntime struct {
-	Tyoe   string `yaml:"tyoe"`
+	Type   string `yaml:"type"`
 	Socket string `yaml:"socket"`
 }
 type ClusterNode struct {
@@ -90,6 +86,10 @@ type ClusterNode struct {
 	Role    string `yaml:"role"`
 	User    string
 	Port    int `yaml:"port"`
+}
+
+type DeployConfig struct {
+	//TODO: 具体配置
 }
 
 type MiddlewareConfig struct {
