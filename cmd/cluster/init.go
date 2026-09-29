@@ -3,7 +3,9 @@ package cluster
 import (
 	"context"
 	"fmt"
-	
+	"strings"
+
+	"github.com/kraken-pedestal/internal/basic/executor"
 	"github.com/kraken-pedestal/internal/config"
 	"github.com/kraken-pedestal/internal/deploy/cluster/kubeadm"
 	"github.com/spf13/cobra"
@@ -44,7 +46,7 @@ func NewInitCommand() *cobra.Command {
 			// 注册 init phases
 			registry := kubeadm.NewPhaseRegistry()
 			kubeadm.RegisterInitPhases(registry)
-			
+
 			// 构建 PhaseConfig
 			phaseConfig := kubeadm.PhaseConfig{
 				KubeadmConfigPath: kadm.ConfigFilePath(),
@@ -53,15 +55,31 @@ func NewInitCommand() *cobra.Command {
 				DryRun:            dryRun,
 				ExtraArgs:         nil,
 			}
-			
+
+			// 构建执行函数
+			hosts := make([]executor.Host, len(fromContext.Cluster.Nodes))
+			for i, n := range fromContext.Cluster.Nodes {
+				hosts[i] = executor.Host{
+					Address: n.Address,
+					User:    n.User,
+					Port:    n.Port,
+				}
+			}
+
 			// 执行
 			exec := func(ctx context.Context, p kubeadm.Phase, cfg kubeadm.PhaseConfig) error {
-				command := p.Command(cfg)
-				fmt.Printf("  -> %s: %v\n", p.Name(), command)
-				
-				// TODO: 实际执行，本地或者ssh
+				cmdStr := strings.Join(p.Command(cfg), " ")
+				results := executor.RunOnHosts(ctx, hosts, cmdStr, executor.Options{
+					Concurrency: len(hosts),
+				})
+				for _, r := range results {
+					if r.Error != nil {
+						return fmt.Errorf("host %s: phase %q failed: %w\n%s", r.Host.Address, p.Name(), r.Error, r.Stderr)
+					}
+				}
 				return nil
 			}
+
 			if phase != "" {
 				return registry.RunOne(cmd.Context(), phase, phaseConfig, exec)
 			}

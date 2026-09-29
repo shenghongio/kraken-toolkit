@@ -22,7 +22,7 @@ TestRunAllDryRun	DryRun 模式	不应调用 ExecuteFunc
 
 */
 
-//mackPhase 用于测试的Phase 实现
+// mackPhase 用于测试的Phase 实现
 type mockPhase struct {
 	name         string
 	description  string
@@ -75,12 +75,12 @@ C 依赖 B → C 入度 1 → B 执行后 C 入度变 0
 */
 func TestRegistrySorted(t *testing.T) {
 	r := NewPhaseRegistry()
-	
+
 	// A 无依赖,B 依赖 A,C 依赖B
 	r.Register(newMockPhase("a"))
 	r.Register(newMockPhase("b", "a"))
 	r.Register(newMockPhase("c", "b"))
-	
+
 	//sorted, err := r.Sorted()
 	sorted, err := r.Sorted()
 	if err != nil {
@@ -110,7 +110,7 @@ func TestRegistrySortedCircular(t *testing.T) {
 	r.Register(newMockPhase("a", "c"))
 	r.Register(newMockPhase("b", "a"))
 	r.Register(newMockPhase("c", "b"))
-	
+
 	_, err := r.Sorted()
 	if err == nil {
 		t.Fatal("expected cicrcular dependency error")
@@ -139,7 +139,7 @@ func TestRegistrySortedCacheInvalidation(t *testing.T) {
 	r.Register(newMockPhase("a"))
 	// -- 建立缓存
 	_, _ = r.Sorted()
-	
+
 	// 新增阶段后缓存应失效
 	r.Register(newMockPhase("b", "a"))
 	sorted, err := r.Sorted()
@@ -157,13 +157,13 @@ func TestRunAll(t *testing.T) {
 	registry.Register(newMockPhase("a"))
 	registry.Register(newMockPhase("b", "a"))
 	registry.Register(newMockPhase("c", "b"))
-	
+
 	var executed []string
 	exec := func(ctx context.Context, phase Phase, cfg PhaseConfig) error {
 		executed = append(executed, phase.Name())
 		return nil
 	}
-	
+
 	ctx := context.Background()
 	cfg := PhaseConfig{}
 	if err := registry.RunAll(ctx, cfg, exec); err != nil {
@@ -202,7 +202,7 @@ func TestRunAllDryRun(t *testing.T) {
 	registry := NewPhaseRegistry()
 	registry.Register(newMockPhase("a"))
 	registry.Register(newMockPhase("b", "a"))
-	
+
 	called := false
 	exec := func(ctx context.Context, phase Phase, cfg PhaseConfig) error {
 		called = true

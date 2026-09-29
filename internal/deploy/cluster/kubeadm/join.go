@@ -44,7 +44,7 @@ func (p *ControlPlaneJoinPhase) Command(cfg PhaseConfig) []string {
 	return []string{cfg.KubeadmBinary, "join", "phase", "control-plane-join", "all", "--config", cfg.KubeadmConfigPath}
 }
 
-// JoinkubeconfigPhase 生成 kubeconfig -- 仅control-plane 角色
+// JoinKubeconfigPhase  生成 kubeconfig -- 仅control-plane 角色
 type JoinKubeconfigPhase struct{}
 
 func (p *JoinKubeconfigPhase) Name() string        { return "kubeconfig" }
@@ -56,7 +56,7 @@ func (p *JoinKubeconfigPhase) Command(cfg PhaseConfig) []string {
 	return []string{cfg.KubeadmBinary, "join", "phase", "kubeconfig", "--config", cfg.KubeadmConfigPath}
 }
 
-//RegisterJoinPhases 将5个 join phase 注册到 PhaseRegistry
+// RegisterJoinPhases 将5个 join phase 注册到 PhaseRegistry
 func RegisterJoinPhases(r *PhaseRegistry) {
 	r.Register(&JoinPreflightPhase{})
 	r.Register(&ControlPlanePreparePhase{})

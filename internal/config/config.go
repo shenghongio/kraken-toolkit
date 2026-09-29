@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	
+
 	"gopkg.in/yaml.v3"
 )
 
@@ -47,13 +47,13 @@ func Load(path string) (*Config, error) {
 	if path == "" {
 		return nil, ErrorConfigEmpty
 	}
-	
+
 	// 2.读取配置文件
 	readFile, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf(`read config file "%q" error: %w`, path, err)
 	}
-	
+
 	//3，yaml解析
 	var cfg Config
 	if err := yaml.Unmarshal(readFile, &cfg); err != nil {

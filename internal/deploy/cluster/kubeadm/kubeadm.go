@@ -23,7 +23,7 @@ type KubeadmConfig struct {
 	ExpectedVersion string //期望版本(来自ClusterConfig.KubernetesVersion)
 }
 
-//NewKubeadm 创建Kubeadm 实例
+// NewKubeadm 创建Kubeadm 实例
 // 查找 kubeadm 二进制路径的顺序
 // 1. cfg.BinaryPath -- 显示指定路径
 // 2. $PATH 中的kubeadm
@@ -106,10 +106,10 @@ func (k *Kubeadm) ValidateVersion(ctx context.Context) error {
 func versionMatch(actual, expected string) bool {
 	actual = strings.TrimPrefix(actual, "v")
 	expected = strings.TrimPrefix(expected, "v")
-	
+
 	aParts := strings.SplitN(actual, ".", 3)
 	eParts := strings.SplitN(expected, ".", 3)
-	
+
 	if len(aParts) < 2 || len(eParts) < 2 {
 		return false
 	}
@@ -131,17 +131,17 @@ func (k *Kubeadm) BuildPhaseCommand(action, phaseName string, extrArgs ...string
 	return args
 }
 
-//BuildInitPhaseCommand 构建kubeadm init phase 命令
+// BuildInitPhaseCommand 构建kubeadm init phase 命令
 func (k *Kubeadm) BuildInitPhaseCommand(phaseName string, extrArgs ...string) []string {
 	return k.BuildPhaseCommand("init", phaseName, extrArgs...)
 }
 
-//BuildJoinPhaseCommand 构建kubeadm join phase 命令
+// BuildJoinPhaseCommand 构建kubeadm join phase 命令
 func (k *Kubeadm) BuildJoinPhaseCommand(phaseName string, extraArgs ...string) []string {
 	return k.BuildPhaseCommand("join", phaseName, extraArgs...)
 }
 
-//RunCommand 在本地执行kubeadm命令，返回 stdout,stderr和错误
+// RunCommand 在本地执行kubeadm命令，返回 stdout,stderr和错误
 func (k *Kubeadm) RunCommand(ctx context.Context, args ...string) (string, string, error) {
 	cmd := exec.CommandContext(ctx, k.binaryPath, args...)
 	var stdout, stderr strings.Builder
@@ -149,5 +149,5 @@ func (k *Kubeadm) RunCommand(ctx context.Context, args ...string) (string, strin
 	cmd.Stderr = &stderr
 	err := cmd.Run()
 	return stdout.String(), stderr.String(), err
-	
+
 }

@@ -3,7 +3,7 @@ package kubeadm
 import (
 	"fmt"
 	"os"
-	
+
 	"github.com/kraken-pedestal/internal/config"
 	"gopkg.in/yaml.v3"
 )
@@ -108,7 +108,7 @@ func (k *Kubeadm) GenerateInitConfig(clustercfg *config.ClusterConfig, nodeAddr 
 			DNSType:       clustercfg.ServiceDNSDomain,
 		},
 	}
-	
+
 	// 2. 从ExtraKubeadm 中获取 apiServer/controllerManager.scheduler/etcd 配置
 	//
 	// 【逻辑流程图】
@@ -155,15 +155,15 @@ func (k *Kubeadm) GenerateInitConfig(clustercfg *config.ClusterConfig, nodeAddr 
 	// map[string]interface{} ──遍历──→ interface{} 值 ──fmt.Sprintf──→ string
 	// 最终目标: clusterYAML.APIServer.ExtraArgs 是 map[string]string
 	if clustercfg.ExtraKubeadm != nil {
-		
+
 		//从 ExtraKubeadm 中取 apiServer 这个 key，并类型断言为 map[string]interface{}。
 		//v 是取到的值
 		//ok 是断言是否成功（如果 apiServer 不存在或类型不对，ok 为 false）
-		
+
 		if v, ok := clustercfg.ExtraKubeadm["apiServer"].(map[string]interface{}); ok {
 			// 再从 apiServer 的map中取 extraArgs ，同样断言为map[string]interface{}
 			if ea, ok := v["extraArgs"].(map[string]interface{}); ok {
-				
+
 				//创建一个 map[string]string，用来存放最终转换后的参数。注意：目标类型是 map[string]string，而源类型是 map[string]interface{}，所以需要转换。
 				args := make(map[string]string)
 				for k, val := range ea {
@@ -173,10 +173,10 @@ func (k *Kubeadm) GenerateInitConfig(clustercfg *config.ClusterConfig, nodeAddr 
 				//最后把转换好的 args 赋值给 clusterYAML.APIServer。
 				clusterYAML.APIServer = &APIServer{ExtraArgs: args}
 			}
-			
+
 		}
 	}
-	
+
 	// 3. 构建InitConfiguration
 	initYAML := &InitConfiguration{
 		APIVersion: "kubeadm.k8s.io/v1beta1",
@@ -200,7 +200,7 @@ func (k *Kubeadm) GenerateInitConfig(clustercfg *config.ClusterConfig, nodeAddr 
 		return fmt.Errorf("marshal ClusterConfiguration: %w", err)
 	}
 	output := append(bytesOutPut, marshal...)
-	
+
 	// 5. 写入文件
 	if err := os.WriteFile(k.configPath, output, 0664); err != nil {
 		return fmt.Errorf("write kubeadm config to %s: %w", k.configPath, err)

@@ -17,14 +17,28 @@
 #   make build-amd64
 #   make build-full
 #
+# 一键流水线：
+#
+#   make pipeline
+#
 # 发布：
 #
 #   make release VERSION=v1.0.0
 #
 # 上传：
 #
-#   make 139_scp ARGS="bin/kraken"
-#   make 138_scp ARGS="bin/kraken"
+#   make 139_scp ARGS="bin/kraken-linux-arm64"
+#   make 138_scp ARGS="bin/kraken-linux-amd64"
+#
+# Git 快捷操作：
+#
+#   make git-status
+#   make git-log
+#   make git-diff
+#   make git-pull
+#   make git-push
+#   make git-add
+#   make git-commit MSG="xxx"
 #
 # 清理：
 #
@@ -44,12 +58,6 @@
 
 BINARY_NAME := kraken
 BINARY_DIR  := bin
-
-# 所有构建统一输出：
-#
-#   bin/kraken
-#
-BINARY_PATH := $(BINARY_DIR)/$(BINARY_NAME)
 
 
 # ============================================================================
@@ -107,6 +115,18 @@ GOOS   ?= $(shell $(GO) env GOOS)
 GOARCH ?= $(shell $(GO) env GOARCH)
 
 
+# 构建产物按平台区分命名：
+#
+#   bin/kraken-linux-arm64
+#   bin/kraken-linux-amd64
+#   bin/kraken-darwin-arm64
+#
+# 注意：BINARY_PATH 里用到了 GOOS / GOARCH，
+# 所以必须放在这两个变量之后定义。
+#
+BINARY_PATH := $(BINARY_DIR)/$(BINARY_NAME)-$(GOOS)-$(GOARCH)
+
+
 # ============================================================================
 # Version Package
 # ============================================================================
@@ -124,6 +144,7 @@ GOARCH ?= $(shell $(GO) env GOARCH)
 #
 #PKG_VERSION := github.com/kraken-pedestal/internal/deploy/executor
 PKG_VERSION := github.com/kraken-pedestal/pkg/cli
+
 
 # ============================================================================
 # Linker Flags
@@ -192,10 +213,18 @@ COLOR_CYAN   := \033[36m
 	build-amd64 \
 	build-full \
 	release \
+	pipeline \
 	139_scp \
 	138_scp \
 	clean \
 	clean-all \
+	git-status \
+	git-log \
+	git-diff \
+	git-pull \
+	git-push \
+	git-add \
+	git-commit \
 	help
 
 
@@ -234,6 +263,7 @@ fmt-check: ## 检查 Go 源代码格式
 
 vet: ## 执行 go vet
 	@printf "$(COLOR_GREEN)执行 go vet...$(COLOR_RESET)\n"
+	@sleep 10
 	@if $(GO) vet ./...; then \
 		printf "$(COLOR_GREEN)✓ vet 检查通过$(COLOR_RESET)\n"; \
 	else \
@@ -247,6 +277,7 @@ vet: ## 执行 go vet
 # ============================================================================
 
 check: fmt-check vet ## 执行格式检查和静态检查
+	@sleep 10
 	@printf "\n$(COLOR_GREEN)✓ 代码检查全部通过$(COLOR_RESET)\n"
 
 
@@ -312,20 +343,9 @@ coverage: ## 执行测试并生成覆盖率
 #
 # 使用当前机器的 GOOS / GOARCH。
 #
-# 例如：
-#
-#   macOS Apple Silicon：
-#       darwin/arm64
-#
-#   Linux ARM64：
-#       linux/arm64
-#
-#   Linux AMD64：
-#       linux/amd64
-#
 # 最终输出：
 #
-#   bin/kraken
+#   bin/kraken-<goos>-<goarch>
 #
 # ============================================================================
 
@@ -348,11 +368,12 @@ build: ## 构建当前平台二进制文件
 #
 # 最终输出：
 #
-#   bin/kraken
+#   bin/kraken-linux-arm64
 #
 # ============================================================================
 
 build-arm64: ## 构建 Linux ARM64（完整编译链）
+	@sleep 10
 	@$(MAKE) build-debug \
 		GOOS=linux \
 		GOARCH=arm64 \
@@ -371,7 +392,7 @@ build-arm64: ## 构建 Linux ARM64（完整编译链）
 #
 # 最终输出：
 #
-#   bin/kraken
+#   bin/kraken-linux-amd64
 #
 # ============================================================================
 
@@ -387,18 +408,6 @@ build-amd64: ## 构建 Linux AMD64（完整编译链）
 # ============================================================================
 #
 # 所有构建最终都会进入这里。
-#
-#   make build
-#       ↓
-#   build-debug
-#
-#   make build-arm64
-#       ↓
-#   build-debug
-#
-#   make build-amd64
-#       ↓
-#   build-debug
 #
 # 编译参数：
 #
@@ -588,13 +597,13 @@ build-full: ## 显示完整系统环境并执行构建
 #   1. fmt-check
 #   2. go vet
 #   3. 单元测试
-#   4. 构建
+#   4. 构建 arm64 + amd64
 #
 # 任意一步失败，Release 都失败。
 #
 # ============================================================================
 
-release: ## 执行完整检查、测试并构建
+release: ## 执行完整检查、测试并构建（arm64 + amd64）
 	@printf "\n"
 	@printf "$(COLOR_BLUE)═══════════════════════════════════════════════════════════════$(COLOR_RESET)\n"
 	@printf "$(COLOR_BLUE)                     Release $(BINARY_NAME)$(COLOR_RESET)\n"
@@ -606,18 +615,112 @@ release: ## 执行完整检查、测试并构建
 	@printf "\n$(COLOR_YELLOW)[2/4] 单元测试$(COLOR_RESET)\n"
 	@$(MAKE) test
 
-	@printf "\n$(COLOR_YELLOW)[3/4] 构建$(COLOR_RESET)\n"
-	@$(MAKE) build \
-		GOOS=$(GOOS) \
-		GOARCH=$(GOARCH) \
-		VERSION="$(VERSION)"
+	@printf "\n$(COLOR_YELLOW)[3/4] 构建（linux/arm64 + linux/amd64）$(COLOR_RESET)\n"
+	@$(MAKE) build-arm64 VERSION="$(VERSION)"
+	@$(MAKE) build-amd64 VERSION="$(VERSION)"
 
 	@printf "\n$(COLOR_YELLOW)[4/4] Release 完成$(COLOR_RESET)\n"
 	@printf "$(COLOR_GREEN)✓ Release 成功$(COLOR_RESET)\n"
 	@printf "  Version: $(VERSION)\n"
-	@printf "  File:    $(BINARY_PATH)\n"
+	@printf "  File:    $(BINARY_DIR)/$(BINARY_NAME)-linux-arm64\n"
+	@printf "  File:    $(BINARY_DIR)/$(BINARY_NAME)-linux-amd64\n"
 
 	@printf "\n$(COLOR_BLUE)═══════════════════════════════════════════════════════════════$(COLOR_RESET)\n"
+
+
+# ============================================================================
+# 一键流水线
+# ============================================================================
+#
+# 依次执行：
+#
+#   1. make clean-all
+#   2. make fmt
+#   3. make vet
+#   4. make build-arm64
+#   5. make build-amd64
+#
+# 任意一步失败，pipeline 立即终止。
+#
+# 用法：
+#
+#   make pipeline
+#   make pipeline VERSION=v1.0.0
+#
+# ============================================================================
+
+pipeline: ## 一键执行 clean-all → fmt → vet → build-arm64 → build-amd64
+	@printf "\n"
+	@printf "$(COLOR_BLUE)═══════════════════════════════════════════════════════════════$(COLOR_RESET)\n"
+	@printf "$(COLOR_BLUE)                One-Key Pipeline（一键流水线）$(COLOR_RESET)\n"
+	@printf "$(COLOR_BLUE)═══════════════════════════════════════════════════════════════$(COLOR_RESET)\n"
+
+	@printf "\n$(COLOR_YELLOW)[1/5] make clean-all$(COLOR_RESET)\n"
+	@$(MAKE) clean-all
+	@sleep 1
+
+	@printf "\n$(COLOR_YELLOW)[2/5] make fmt$(COLOR_RESET)\n"
+	@$(MAKE) fmt
+	@sleep 1
+
+	@printf "\n$(COLOR_YELLOW)[3/5] make vet$(COLOR_RESET)\n"
+	@$(MAKE) vet
+	@sleep 1
+
+	@printf "\n$(COLOR_YELLOW)[4/5] make build-arm64$(COLOR_RESET)\n"
+	@$(MAKE) build-arm64 VERSION="$(VERSION)"
+	@sleep 1
+
+	@printf "\n$(COLOR_YELLOW)[5/5] make build-amd64$(COLOR_RESET)\n"
+	@$(MAKE) build-amd64 VERSION="$(VERSION)"
+
+	@printf "\n$(COLOR_GREEN)═══════════════════════════════════════════════════════════════$(COLOR_RESET)\n"
+	@printf "$(COLOR_GREEN)✓ One-Key Pipeline 完成$(COLOR_RESET)\n"
+	@printf "$(COLOR_GREEN)  - linux/arm64: $(BINARY_DIR)/$(BINARY_NAME)-linux-arm64$(COLOR_RESET)\n"
+	@printf "$(COLOR_GREEN)  - linux/amd64: $(BINARY_DIR)/$(BINARY_NAME)-linux-amd64$(COLOR_RESET)\n"
+	@printf "$(COLOR_GREEN)═══════════════════════════════════════════════════════════════$(COLOR_RESET)\n"
+
+
+# ============================================================================
+# Git 快捷操作
+# ============================================================================
+
+git-status: ## 查看 Git 状态
+	@printf "$(COLOR_GREEN)git status$(COLOR_RESET)\n"
+	@git status
+
+git-log: ## 查看最近 20 条提交（图形化）
+	@printf "$(COLOR_GREEN)git log --oneline --graph --decorate -20$(COLOR_RESET)\n"
+	@git log --oneline --graph --decorate -20
+
+git-diff: ## 查看未暂存的改动
+	@printf "$(COLOR_GREEN)git diff$(COLOR_RESET)\n"
+	@git diff
+
+git-pull: ## 从远端拉取代码
+	@printf "$(COLOR_GREEN)git pull$(COLOR_RESET)\n"
+	@git pull
+
+git-push: ## 推送到远端
+	@printf "$(COLOR_GREEN)git push$(COLOR_RESET)\n"
+	@git push
+
+git-add: ## 将所有改动添加到暂存区
+	@printf "$(COLOR_GREEN)git add -A$(COLOR_RESET)\n"
+	@git add -A
+
+git-commit: ## 提交改动（需要 MSG 参数）
+	@if [ -z "$(strip $(MSG))" ]; then \
+		printf "$(COLOR_RED)✗ 未指定提交信息$(COLOR_RESET)\n"; \
+		printf "\n$(COLOR_YELLOW)用法：$(COLOR_RESET)\n"; \
+		printf "  make git-commit MSG=\"提交信息\"\n"; \
+		printf "\n$(COLOR_YELLOW)示例：$(COLOR_RESET)\n"; \
+		printf "  make git-commit MSG=\"fix: 修复 vet 缩进\"\n"; \
+		exit 1; \
+	fi
+	@printf "$(COLOR_GREEN)git add -A && git commit -m \"$(MSG)\"$(COLOR_RESET)\n"
+	@git add -A
+	@git commit -m "$(MSG)"
 
 
 # ============================================================================
@@ -626,11 +729,11 @@ release: ## 执行完整检查、测试并构建
 #
 # 上传：
 #
-#   make 139_scp ARGS="bin/kraken"
+#   make 139_scp ARGS="bin/kraken-linux-arm64"
 #
 # 多文件：
 #
-#   make 139_scp ARGS="bin/kraken config.yaml"
+#   make 139_scp ARGS="bin/kraken-linux-arm64 config.yaml"
 #
 # ============================================================================
 
@@ -640,7 +743,8 @@ release: ## 执行完整检查、测试并构建
 		printf "\n$(COLOR_YELLOW)用法：$(COLOR_RESET)\n"; \
 		printf "  make 139_scp ARGS=\"文件路径\"\n"; \
 		printf "\n$(COLOR_YELLOW)示例：$(COLOR_RESET)\n"; \
-		printf "  make 139_scp ARGS=\"bin/kraken\"\n"; \
+		printf "  make 139_scp ARGS=\"bin/kraken-linux-arm64\"\n"; \
+		printf "  make 139_scp ARGS=\"bin/kraken-linux-amd64\"\n"; \
 		exit 1; \
 	fi
 
@@ -666,7 +770,8 @@ release: ## 执行完整检查、测试并构建
 		printf "\n$(COLOR_YELLOW)用法：$(COLOR_RESET)\n"; \
 		printf "  make 138_scp ARGS=\"文件路径\"\n"; \
 		printf "\n$(COLOR_YELLOW)示例：$(COLOR_RESET)\n"; \
-		printf "  make 138_scp ARGS=\"bin/kraken\"\n"; \
+		printf "  make 138_scp ARGS=\"bin/kraken-linux-arm64\"\n"; \
+		printf "  make 138_scp ARGS=\"bin/kraken-linux-amd64\"\n"; \
 		exit 1; \
 	fi
 

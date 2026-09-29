@@ -29,7 +29,7 @@ func NewAddUserCmd() *cobra.Command {
 		Long: "Uses bootstrap credentials to create the management user on all targets.\n" +
 			"    * Requires bootstrap.user, private_key_path, public_key_path in config.\n" +
 			"    * Use --confirm to proceed after reviewing the preview.",
-		
+
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) > 0 {
 				cli.PrintSubCmdHelp(cmd)
@@ -52,7 +52,7 @@ func NewAddUserCmd() *cobra.Command {
 			if cfg.Basic.PublicKeyPath == "" {
 				return fmt.Errorf("adduser requires public_key_path in config")
 			}
-			
+
 			// 读取公钥内容
 			pubKeyBytes, err := os.ReadFile(cfg.Basic.PublicKeyPath)
 			if err != nil {
@@ -60,7 +60,7 @@ func NewAddUserCmd() *cobra.Command {
 			}
 			pubKeyContext := strings.TrimSpace(string(pubKeyBytes))
 			newUser := cfg.Basic.User
-			
+
 			// 确认
 			if !confirm {
 				fmt.Printf("Warning: User '%s' will be created and public key deployed on%d hosts\n", newUser, len(cfg.Basic.IPList))
@@ -69,12 +69,12 @@ func NewAddUserCmd() *cobra.Command {
 				fmt.Println("\nUse -- confirm to confirm execution")
 				return nil
 			}
-			
+
 			runnerCfg, err := runner.BuildFromConfig(cfg)
 			if err != nil {
 				return err
 			}
-			
+
 			// adduser 需要用bootstrap用户登录，覆盖默认的ssh用户
 			runnerCfg.SSHOptions.User = cfg.Basic.Bootstrap.User
 			results := runner.Run(cmd.Context(), runnerCfg, func(ctx context.Context, host executor.Host, client *ssh.Client) executor.Result {
@@ -113,7 +113,7 @@ func setUpKrakenUser(client *ssh.Client, username, pubKey string) error {
 		return fmt.Errorf("create ssh session failed: %w", err)
 	}
 	defer session.Close()
-	
+
 	output, err := session.CombinedOutput(buf.String())
 	if err != nil {
 		return fmt.Errorf("create user failed: %w\n%s", err, strings.TrimSpace(string(output)))

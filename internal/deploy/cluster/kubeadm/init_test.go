@@ -21,7 +21,7 @@ func TestRegisterInitPhases(t *testing.T) {
 	if sorted[11].Name() != "addon" {
 		t.Fatalf("expected phase 'addon', got %s", sorted[11].Name())
 	}
-	
+
 }
 func TestInitPhaseCommands(t *testing.T) {
 	phaseConfig := PhaseConfig{

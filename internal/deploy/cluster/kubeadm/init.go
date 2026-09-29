@@ -31,7 +31,7 @@ func (p *KubeconfigPhase) Command(cfg PhaseConfig) []string {
 	return []string{cfg.KubeadmBinary, "init", "phase", "kubeconfig", "--config", cfg.KubeadmConfigPath}
 }
 
-//ControlPlanePhase 生成静态pod清单
+// ControlPlanePhase 生成静态pod清单
 type ControlPlanePhase struct{}
 
 func (p *ControlPlanePhase) Name() string { return "control-plane" }
@@ -76,9 +76,11 @@ func (p *KubeletStartPhase) Command(cfg PhaseConfig) []string {
 // UploadConfigPhase 上传kubeadm 配置到集群
 type UploadConfigPhase struct{}
 
-func (p *UploadConfigPhase) Name() string           { return "upload-config" }
-func (p *UploadConfigPhase) Description() string    { return "Upload kubeadm and kubelet configuration " }
-func (p *UploadConfigPhase) Dependencies() []string { return []string{"kubelet-start", "control-plane"} }
+func (p *UploadConfigPhase) Name() string        { return "upload-config" }
+func (p *UploadConfigPhase) Description() string { return "Upload kubeadm and kubelet configuration " }
+func (p *UploadConfigPhase) Dependencies() []string {
+	return []string{"kubelet-start", "control-plane"}
+}
 func (p *UploadConfigPhase) Command(cfg PhaseConfig) []string {
 	return []string{cfg.KubeadmBinary, "init", "phase", "upload-config", "all", "--config", cfg.KubeadmConfigPath}
 }

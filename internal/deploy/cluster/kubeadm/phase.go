@@ -88,7 +88,7 @@ func (r *PhaseRegistry) Sorted() ([]Phase, error) {
 	if r.order != nil {
 		return r.orderToPhases(), nil
 	}
-	
+
 	// 计算每个节点的入度
 	inDegree := make(map[string]int)
 	for n := range r.phases {
@@ -103,7 +103,7 @@ func (r *PhaseRegistry) Sorted() ([]Phase, error) {
 			}
 		}
 	}
-	
+
 	// kahn 算法： 不断取出入度为0的节点
 	var sorted []string
 	queue := make([]string, 0)
@@ -116,7 +116,7 @@ func (r *PhaseRegistry) Sorted() ([]Phase, error) {
 		name := queue[0]
 		queue = queue[1:]
 		sorted = append(sorted, name)
-		
+
 		// 减少所有后继口节点的入度
 		for _, p := range r.phases {
 			for _, dep := range p.Dependencies() {
@@ -129,7 +129,7 @@ func (r *PhaseRegistry) Sorted() ([]Phase, error) {
 			}
 		}
 	}
-	
+
 	// 如果有节点未被排序，说明存在循环依赖
 	if len(sorted) != len(r.phases) {
 		return nil, fmt.Errorf("circular dependency detected in phases")
@@ -177,13 +177,13 @@ func (r *PhaseRegistry) RunOne(ctx context.Context, name string, cfg PhaseConfig
 	}
 	// 收集目标阶段的所有依赖 (BFS)
 	deps := r.collectDependencies(name)
-	
+
 	// 按拓扑顺序执行依赖链 + 目标阶段
 	sorted, err := r.Sorted()
 	if err != nil {
 		return fmt.Errorf("phase sorting failed: %w", err)
 	}
-	
+
 	// 过滤出需要执行的阶段
 	deps[name] = true
 	for _, phase := range sorted {
@@ -202,10 +202,10 @@ func (r *PhaseRegistry) RunOne(ctx context.Context, name string, cfg PhaseConfig
 		if err := exec(ctx, phase, cfg); err != nil {
 			return fmt.Errorf("phase %q failed %w", phase.Name(), err)
 		}
-		
+
 	}
 	return nil
-	
+
 }
 
 func (r *PhaseRegistry) collectDependencies(name string) map[string]bool {

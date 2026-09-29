@@ -5,11 +5,11 @@ import "testing"
 func TestRegisterJoinPhases(t *testing.T) {
 	r := NewPhaseRegistry()
 	RegisterJoinPhases(r)
-	
+
 	if len(r.List()) != 5 {
 		t.Fatalf("expected 5 join phases, got %d", len(r.List()))
 	}
-	
+
 	sorted, err := r.Sorted()
 	if err != nil {
 		t.Fatalf("sorted failed: %v", err)
@@ -27,7 +27,7 @@ func TestJoinPhaseCommands(t *testing.T) {
 		KubeadmBinary:     "/usr/bin/kubeadm",
 		KubeadmConfigPath: "/tmp/kubeadm.yaml",
 	}
-	
+
 	tests := []struct {
 		phase    Phase
 		expected []string
@@ -38,7 +38,7 @@ func TestJoinPhaseCommands(t *testing.T) {
 		{&ControlPlaneJoinPhase{}, []string{"/usr/bin/kubeadm", "join", "phase", "control-plane-join", "all", "--config", "/tmp/kubeadm.yaml"}},
 		{&JoinKubeconfigPhase{}, []string{"/usr/bin/kubeadm", "join", "phase", "kubeconfig", "--config", "/tmp/kubeadm.yaml"}},
 	}
-	
+
 	for _, tt := range tests {
 		got := tt.phase.Command(cfg)
 		if len(got) != len(tt.expected) {
