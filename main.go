@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/kraken-pedestal/cmd"
-	"github.com/kraken-pedestal/pkg/logger"
+	"github.com/kraken-toolkit/cmd"
+	"github.com/kraken-toolkit/pkg/logger"
 	"os"
 	"runtime/debug"
 )

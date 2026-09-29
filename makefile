@@ -142,8 +142,8 @@ BINARY_PATH := $(BINARY_DIR)/$(BINARY_NAME)-$(GOOS)-$(GOARCH)
 #       buildTime = "unknown"
 #   )
 #
-#PKG_VERSION := github.com/kraken-pedestal/internal/deploy/executor
-PKG_VERSION := github.com/kraken-pedestal/pkg/cli
+#PKG_VERSION := github.com/kraken-toolkit/internal/deploy/executor
+PKG_VERSION := github.com/kraken-toolkit/pkg/cli
 
 
 # ============================================================================

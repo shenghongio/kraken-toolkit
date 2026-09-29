@@ -3,15 +3,13 @@ package cluster
 import (
 	"context"
 	"fmt"
-	"strings"
 	
-	"github.com/kraken-pedestal/internal/basic/executor"
-	"github.com/kraken-pedestal/internal/config"
-	"github.com/kraken-pedestal/internal/deploy/cluster/kubeadm"
+	"github.com/kraken-toolkit/internal/config"
+	"github.com/kraken-toolkit/internal/deploy/cluster/kubeadm"
 	"github.com/spf13/cobra"
 )
 
-// NewJoinCommand  创建kraken cluster join命令
+// NewJoinCmd 创建kraken cluster join命令
 func NewJoinCommand() *cobra.Command {
 	var (
 		dryRun bool
@@ -55,28 +53,10 @@ func NewJoinCommand() *cobra.Command {
 				NodeAddress:       nodeAddress,
 				DryRun:            dryRun,
 			}
-			
-			// 构建执行函数
-			hosts := make([]executor.Host, len(cfg.Cluster.Nodes))
-			for i, n := range cfg.Cluster.Nodes {
-				hosts[i] = executor.Host{
-					Address: n.Address,
-					User:    n.User,
-					Port:    n.Port,
-				}
-			}
-			
 			// 执行
 			exec := func(ctx context.Context, p kubeadm.Phase, cfg kubeadm.PhaseConfig) error {
-				cmdStr := strings.Join(p.Command(cfg), " ")
-				results := executor.RunOnHosts(ctx, hosts, cmdStr, executor.Options{
-					Concurrency: len(hosts),
-				})
-				for _, r := range results {
-					if r.Error != nil {
-						return fmt.Errorf("host %s: phase %q failed: %w\n%s", r.Host.Address, p.Name(), r.Error, r.Stderr)
-					}
-				}
+				args := p.Command(cfg)
+				fmt.Printf(" -> %s: %v\n", p.Name(), args)
 				return nil
 			}
 			if phase != "" {
