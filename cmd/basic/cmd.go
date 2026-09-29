@@ -3,10 +3,10 @@ package basic
 import (
 	"context"
 	"fmt"
-	"github.com/kraken-pedestal/internal/basic/executor"
-	"github.com/kraken-pedestal/internal/config"
-	"github.com/kraken-pedestal/pkg/cli"
-	"github.com/kraken-pedestal/utils"
+	"github.com/kraken-toolkit/internal/basic/executor"
+	"github.com/kraken-toolkit/internal/config"
+	"github.com/kraken-toolkit/pkg/cli"
+	"github.com/kraken-toolkit/utils"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh"
 )

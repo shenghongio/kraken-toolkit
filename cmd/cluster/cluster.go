@@ -3,7 +3,7 @@ package cluster
 import (
 	"log/slog"
 	
-	"github.com/kraken-pedestal/pkg/cli"
+	"github.com/kraken-toolkit/pkg/cli"
 	"github.com/spf13/cobra"
 )
 

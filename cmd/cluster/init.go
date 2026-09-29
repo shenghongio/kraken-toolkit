@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	
-	"github.com/kraken-pedestal/internal/config"
-	"github.com/kraken-pedestal/internal/deploy/cluster/kubeadm"
+	"github.com/kraken-toolkit/internal/config"
+	"github.com/kraken-toolkit/internal/deploy/cluster/kubeadm"
 	"github.com/spf13/cobra"
 )
 

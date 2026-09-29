@@ -3,8 +3,9 @@ package runner
 import (
 	"context"
 	"fmt"
-	"github.com/kraken-pedestal/internal/basic/executor"
-	"github.com/kraken-pedestal/internal/config"
+	
+	"github.com/kraken-toolkit/internal/basic/executor"
+	"github.com/kraken-toolkit/internal/config"
 	"golang.org/x/crypto/ssh"
 )
 

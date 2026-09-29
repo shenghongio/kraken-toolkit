@@ -348,7 +348,7 @@ CLI Flags (concurrency, timeout, limit...)
 | `doc/` 与 `docs/` 并存 | 根目录 | 统一文档目录 |
 | `basic.go` subcommands 全部注释 | `cmd/basic/basic.go` | 或者删除，或者实现 |
 | `internal/deploy/README.md` 仅一行 | `internal/deploy/` | 冗余文件 |
-| `PKG_VERSION` 指向不存在路径 | makefile:73 | `github.com/kraken-pedestal/internal/deploy/executor` 不存在 |
+| `PKG_VERSION` 指向不存在路径 | makefile:73 | `github.com/kraken-toolkit/internal/deploy/executor` 不存在 |
 | Config 全局加载被注释 | `root.go` | 配置模型已就绪但未接入 CLI |
 
 ### 6.3 缺失测试

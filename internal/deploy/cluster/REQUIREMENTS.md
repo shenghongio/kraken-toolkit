@@ -812,7 +812,7 @@ RunOne(name)                                 RunAll()
 ### 9.1 新增文件
 
 ```
-kraken-pedestal/
+kraken-toolkit/
 │
 ├── cmd/
 │   ├── root.go                          ← [修改] 注册 cluster 命令组

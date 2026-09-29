@@ -1,4 +1,4 @@
-module github.com/kraken-pedestal
+module github.com/kraken-toolkit
 
 go 1.26.0
 

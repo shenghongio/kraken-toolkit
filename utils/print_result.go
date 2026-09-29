@@ -2,7 +2,7 @@ package utils
 
 import (
 	"fmt"
-	"github.com/kraken-pedestal/internal/basic/executor"
+	"github.com/kraken-toolkit/internal/basic/executor"
 	"strings"
 	"time"
 )

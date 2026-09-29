@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 	
-	"github.com/kraken-pedestal/internal/deploy/cluster/kubeadm"
+	"github.com/kraken-toolkit/internal/deploy/cluster/kubeadm"
 	"github.com/spf13/cobra"
 )
 

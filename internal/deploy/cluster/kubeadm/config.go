@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 	
-	"github.com/kraken-pedestal/internal/config"
+	"github.com/kraken-toolkit/internal/config"
 	"gopkg.in/yaml.v3"
 )
 

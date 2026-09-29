@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"log/slog"
 	
-	"github.com/kraken-pedestal/cmd/basic"
-	"github.com/kraken-pedestal/cmd/cluster"
-	"github.com/kraken-pedestal/internal/config"
-	"github.com/kraken-pedestal/pkg/cli"
-	"github.com/kraken-pedestal/pkg/logger"
-	"github.com/kraken-pedestal/utils"
+	"github.com/kraken-toolkit/cmd/basic"
+	"github.com/kraken-toolkit/cmd/cluster"
+	"github.com/kraken-toolkit/internal/config"
+	"github.com/kraken-toolkit/pkg/cli"
+	"github.com/kraken-toolkit/pkg/logger"
+	"github.com/kraken-toolkit/utils"
 	"github.com/spf13/cobra"
 )
 
