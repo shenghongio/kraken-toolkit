@@ -184,10 +184,9 @@ checks:
       host: 10.0.0.1
       port: 6443
 
-  - name: kernel-swap-off
+  - name: kernel-info
     type: kernel
-    params:
-      verify_swap_off: true
+    # 信息采集型：输出内核版本 + swap 状态，供人工判断，无 params
 ```
 
 ### 6.2.1 加载来源（本地清单文件，懒生成）
@@ -281,7 +280,7 @@ func RegisterCheck(t string, factory func(params map[string]any) Check)
 | `disk` | `df -P <path>` | 剩余 >= min_free_gb |
 | `memory` | `cat /proc/meminfo` | 总内存 >= min_gb |
 | `network` | 探测 host:port 连通 | dial 成功 = PASS |
-| `kernel` | `uname -r` + 查模块 / swap | 按指定判据 |
+| `kernel` | `uname -r` + `cat /proc/swaps` | 信息采集型：不做判定，输出内核版本 + swap 状态供人工判断 |
 
 **ssh 类型（sshd 服务优化检查）**
 
@@ -403,8 +402,8 @@ type DiskCheck struct{ path string; min int }    // df -P <path> → 剩余 >= m
 type MemoryCheck struct{ min int }               // /proc/meminfo → 总内存 >= min(GB)
 // network.go
 type NetworkCheck struct{ host string; port int }// 探测 host:port 连通
-// kernel.go
-type KernelCheck struct{ ... }                   // uname -r + 模块/swap 判定
+// kernel.go 信息采集型：不做判定，输出 (内核版本 + swap 状态) 供人工判断
+type KernelCheck struct{} // uname -r + /proc/swaps → detail 输出原始采集信息，恒 ok
 
 // 各文件 v 通过 init() 调用 RegisterCheck 注册工厂
 func init() { RegisterCheck("disk", func(p map[string]any) Check { return &DiskCheck{...} }) }
