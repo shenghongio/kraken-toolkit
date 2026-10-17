@@ -3,9 +3,10 @@ package executor
 import (
 	"context"
 	"fmt"
-	"golang.org/x/crypto/ssh"
 	"sync"
 	"time"
+	
+	"golang.org/x/crypto/ssh"
 )
 
 // Result 表示单个主机上一次操作的执行结果。
@@ -18,6 +19,7 @@ import (
 //   - Stderr: 远程命令标准错误
 //   - Error: 执行过程中的错误（连接失败、操作错误等），成功时为 nil
 //   - Duration: 从开始连接到操作完成的总耗时
+
 type Result struct {
 	Host     Host
 	ExitCode int
@@ -32,7 +34,7 @@ type Result struct {
 type Options struct {
 	// Concurrency 控制同时执行的主机数量
 	Concurrency int
-
+	
 	// SSH 连接参数
 	SSH SSHOptions
 }
@@ -106,7 +108,7 @@ func (e *Executor) Run(ctx context.Context, hosts []Host, operation func(context
 		//go func(index int, host inventory.Host) {}()
 		go func() {
 			defer wg.Done()
-
+			
 			// 进入时先检查 ctx 是否已取消，取消则直接记录错误并返回
 			select {
 			case <-ctx.Done():
@@ -132,7 +134,7 @@ func (e *Executor) Run(ctx context.Context, hosts []Host, operation func(context
 				<-semaphore
 			}()
 			start := time.Now()
-
+			
 			// 建立 SSH 连接；失败则记录错误并返回（不调用 operation）
 			client, err := e.ssh.Connect(host)
 			if err != nil {

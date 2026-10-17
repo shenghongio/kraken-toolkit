@@ -10,7 +10,7 @@ import (
 
 type checkRow struct {
 	ok     bool
-	datail string
+	detail string
 }
 
 func PrintDisplayResult(results []executor.Result) bool {
@@ -127,11 +127,11 @@ func PrintCheckResults(results []executor.CheckResult) error {
 		if matrix[r.Host] == nil {
 			matrix[r.Host] = map[string]checkRow{}
 		}
-		datail := r.Detail
+		detail := r.Detail
 		if r.Error != nil {
-			datail = r.Error.Error()
+			detail = r.Error.Error()
 		}
-		matrix[r.Host][r.Check] = checkRow{ok: r.OK, datail: datail}
+		matrix[r.Host][r.Check] = checkRow{ok: r.OK, detail: detail}
 	}
 	
 	// 表头
@@ -164,12 +164,12 @@ func PrintCheckResults(results []executor.CheckResult) error {
 			for _, c := range checkOrder {
 				row := matrix[h][c]
 				if !row.ok {
-					fmt.Printf("  %s / %s: %s\n", h, c, row.datail)
+					fmt.Printf("  %s / %s: %s\n", h, c, row.detail)
 				}
 			}
 		}
 		return fmt.Errorf("%d check(s) failed", failCount)
 	}
-	fmt.Println("\na checks passed")
+	fmt.Println("\nall checks passed")
 	return nil
 }
